@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HSKK Trung Cấp - AI Master (Fixed)</title>
+    <title>HSKK Trung Cấp - AI Master (Print Options)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -11,9 +11,10 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+    
     <style>
         body { font-family: 'Nunito', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
-        .chinese-text { font-family: 'Kaiti','Noto Sans SC', sans-serif; }
+        .chinese-text { font-family: 'Noto Sans SC', sans-serif; }
         .recording-pulse { animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
@@ -225,12 +226,7 @@
                 <div id="create-new-card" onclick="App.openAICreator()" class="group relative bg-white rounded-2xl p-1 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
                     <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-sm"></div>
                     <div class="bg-white h-full rounded-xl p-6 flex flex-col items-center justify-center text-center relative overflow-hidden border border-gray-100 group-hover:border-transparent">
-                        <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 text-blue-600">
-                            <i class="fa-solid fa-wand-magic-sparkles text-2xl"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">Tạo Đề AI Mới</h3>
-                        <p class="text-sm text-gray-500 mb-4">Tùy chỉnh chủ đề, tự động lưu vào trình duyệt.</p>
-                        <span class="inline-flex items-center text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full"><i class="fa-solid fa-plus mr-1"></i> Bắt đầu</span>
+                        <span class="inline-flex items-center text-2xl font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full"><i class="fa-solid fa-plus mr-1"></i> Tạo đề</span>
                     </div>
                 </div>
             </div>
@@ -346,14 +342,6 @@
                     <button onclick="location.reload()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-bold text-sm transition"><i class="fa-solid fa-house mr-2"></i>Về trang chủ</button>
                 </div>
             </div>
-
-            <!-- NEW: Grade All Button -->
-            <div class="flex justify-center mb-8">
-                <button onclick="App.gradeAll()" id="btn-grade-all" class="px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold shadow-lg shadow-purple-200 transition-all transform active:scale-95 flex items-center text-lg">
-                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Chấm điểm tất cả (AI)
-                </button>
-            </div>
-
             <div class="space-y-10">
                 <div id="review-part-1">
                     <div class="flex items-center gap-3 mb-6 sticky top-0 bg-slate-50 py-3 z-10 border-b border-gray-200">
@@ -544,7 +532,7 @@
                 mediaRecorder: null, audioChunks: [],
                 tempAIExam: null,
                 targetDeleteId: null, targetEditId: null, editingExamId: null,
-                targetPrintId: null,
+                targetPrintId: null, // New: For Print Modal
                 isExternal: false,
                 completedExams: new Set()
             },
@@ -595,6 +583,7 @@
             },
             
             resetExamState() { this.state.p1Index=0; this.state.p2Index=0; this.state.p3Index=0; this.state.userRecordings={p1:[],p2:[],p3:[]}; },
+            
             loadExamData(examId) {
                 this.state.currentExam = examId;
                 const p1Raw = MockFileSystem.getFile(`data_HSKK/${examId}/p1.txt`);
@@ -647,60 +636,126 @@
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                 const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `HSKK_Data_${examId}.json`; link.click();
             },
-            importJSON() {
-                const input = document.createElement('input');
-                input.type = 'file'; input.accept = '.json';
-                input.onchange = e => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = event => {
-                        try {
-                            const data = JSON.parse(event.target.result);
-                            if (!data || (typeof data !== 'object')) throw new Error("Invalid JSON structure");
-                            const newId = `import_${Date.now()}`;
-                            MockFileSystem.addExam(newId, data);
-                            alert("Nhập dữ liệu thành công!");
-                            this.renderDashboard();
-                        } catch(err) { 
-                            console.error(err);
-                            alert("Lỗi: File JSON không hợp lệ hoặc cấu trúc sai."); 
-                        }
-                    };
-                    reader.readAsText(file);
-                };
-                input.click();
-            },
 
+            // --- UPDATED PRINT LOGIC ---
             printExam(examId, event) {
                 event.stopPropagation();
                 this.state.targetPrintId = examId;
                 document.getElementById('print-options-modal').classList.remove('hidden');
+                
+                // Bind click events (avoiding multiple bindings if called repeatedly)
                 const btnQuestions = document.getElementById('btn-print-questions');
                 const btnFull = document.getElementById('btn-print-full');
+                
+                // Clone to remove old listeners
                 const newBtnQ = btnQuestions.cloneNode(true);
                 const newBtnF = btnFull.cloneNode(true);
                 btnQuestions.parentNode.replaceChild(newBtnQ, btnQuestions);
                 btnFull.parentNode.replaceChild(newBtnF, btnFull);
-                newBtnQ.onclick = () => { this.doPrint(this.state.targetPrintId, false); document.getElementById('print-options-modal').classList.add('hidden'); };
-                newBtnF.onclick = () => { this.doPrint(this.state.targetPrintId, true); document.getElementById('print-options-modal').classList.add('hidden'); };
+
+                newBtnQ.onclick = () => {
+                    this.doPrint(this.state.targetPrintId, false);
+                    document.getElementById('print-options-modal').classList.add('hidden');
+                };
+                
+                newBtnF.onclick = () => {
+                    this.doPrint(this.state.targetPrintId, true);
+                    document.getElementById('print-options-modal').classList.add('hidden');
+                };
             },
 
             doPrint(examId, withAnswers) {
                 this.loadExamData(examId);
-                const p1Content = withAnswers ? `<ol class="chinese-font" style="line-height: 1.3;">${this.state.p1Data.map(s => `<li>${s}</li>`).join('')}</ol>` : `<p style="margin-left: 20px; font-style: italic;">(Thí sinh nghe ghi âm và nhắc lại)</p>`;
-                const p2Content = this.state.p2Data.map((d, i) => `<div class="q-box clearfix"><strong>Hình ${i+1}:</strong><div style="margin-top: 10px;">${d.img ? `<img src="${d.img}">` : ''}${withAnswers ? `<div class="p-box"><p class="chinese-font" style="font-size: 14pt;">${d.hanzi}</p><p style="font-style: italic; color: #444;">${d.pinyin}</p><p>${d.meaning}</p></div>` : ''}</div></div>`).join('');
-                const p3Content = this.state.p3Data.map((d, i) => `<div class="q-box clearfix"><strong>Câu ${i+1}: ${d.question}</strong>${withAnswers ? `<div class="p-box" style="margin-top: 10px;"><p class="chinese-font" style="font-size: 14pt;">${d.hanzi}</p><p style="color: #444;">${d.pinyin}</p><p>${d.meaning}</p></div>` : `<div></div>`}</div>`).join('');
-                const printContent = `<html><head><title>In Đề Thi - ${examId}</title><style>body { font-family:  'Mulish', 'Times New Roman', serif; max-width: 210mm; margin: 0 auto; padding: 10mm; font-size: 14pt; line-height: 1.5; } @media print { body { padding: 0; } .no-print { display: none; } } h1 { text-align: center; font-size: 20pt; border-bottom: 1px solid #000; padding-bottom: 10px; margin-bottom: 20px; } h2 { margin-top: 20px; font-size: 16pt; margin-bottom: 10px; padding-bottom: 5px; } img { width: 5cm; height: 5cm; object-fit: cover; border: 1px solid #000; float: left; margin-right: 15px; margin-bottom: 10px; } .q-box { margin-bottom: 15px; clear: both; } .p-box { text-align: justify; } ul, ol { margin-top: 5px; margin-bottom: 5px; } p { margin: 5px 0; } .chinese-font { font-family: "Kaiti","SimSun", "Noto Sans SC", serif; font-size: 16pt} .clearfix::after { content: ""; clear: both; display: table; } .btn-print { position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: blue; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; } </style></head><body><button class="btn-print no-print" onclick="window.print()">🖨️ In ngay</button><h1>ĐỀ MÔ PHỎNG HSKK TRUNG CẤP<br><span style="font-size: 14pt; font-weight: normal;">ID: ${examId}</span></h1><h2>PHẦN 1: Nghe và nhắc lại (听后重复)</h2>${p1Content}<h2>PHẦN 2: Mô tả tranh cho trước(看图说话)</h2>${p2Content}<h2>PHẦN 3: Trả lời câu hỏi nghị luận(回答问题)</h2>${p3Content}</body></html>`;
+                
+                // Conditionals for Content
+                const p1Content = withAnswers 
+                    ? `<ol class="chinese-font" style="line-height: 1.3;">${this.state.p1Data.map(s => `<li>${s}</li>`).join('')}</ol>`
+                    : `<p style="margin-left: 20px; font-style: italic;">(Thí sinh nghe ghi âm và nhắc lại)</p>`;
+
+                const p2Content = this.state.p2Data.map((d, i) => `
+                    <div class="q-box clearfix">
+                        <strong>Hình ${i+1}:</strong>
+                        <div style="margin-top: 10px;">
+                            ${d.img ? `<img src="${d.img}">` : ''}
+                            ${withAnswers ? `
+                            <div class="p-box">
+                                <p class="chinese-font" style="font-size: 16pt;">${d.hanzi}</p>
+                                <p style="font-style: italic; color: #444;">${d.pinyin}</p>
+                                <p>${d.meaning}</p>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+                const p3Content = this.state.p3Data.map((d, i) => `
+                    <div class="q-box clearfix">
+                        <strong>Câu ${i+1}: ${d.question}</strong>
+                        ${withAnswers ? `
+                        <div class="p-box" style="margin-top: 10px;">
+                            <p class="chinese-font" style="font-size: 14pt;">${d.hanzi}</p>
+                            <p style="color: #444;">${d.pinyin}</p>
+                            <p>${d.meaning}</p>
+                        </div>` : `<div </div>`}
+                    </div>
+                `).join('');
+
+                const printContent = `
+                    <html>
+                    <head>
+                        <title>In Đề Thi - ${examId}</title>
+                        <style>
+                            body { font-family: 'Mulish','Times New Roman', serif; max-width: 210mm; margin: 0 auto; padding: 10mm; font-size: 14pt; line-height: 1.5; }
+                            @media print { 
+                                body { padding: 0; }
+                                .no-print { display: none; }
+                            }
+                            h1 { text-align: center; font-size: 20pt; border-bottom: 1px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+                            h2 { margin-top: 20px; font-size: 16pt; margin-bottom: 10px; padding-bottom: 5px; }
+                            img { width: 5cm; height: 5cm; object-fit: cover; border: 1px solid #000; float: left; margin-right: 15px; margin-bottom: 10px; }
+                            .q-box { margin-bottom: 15px; clear: both; }
+                            .p-box { text-align: justify; }
+                            ul, ol { margin-top: 5px; margin-bottom: 5px; }
+                            p { margin: 5px 0; }
+                            .chinese-font { font-family: "Kaiti", "SimSun", "Noto Sans SC", serif; font-size: 16pt}
+                            .clearfix::after { content: ""; clear: both; display: table; }
+                            .btn-print { position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: blue; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+                        </style>
+                    </head>
+                    <body>
+                        <button class="btn-print no-print" onclick="window.print()">🖨️ In ngay</button>
+                        
+                        <h1>ĐỀ MÔ PHỎNG HSKK TRUNG CẤP<br><span style="font-size: 14pt; font-weight: normal;">ID: ${examId}</span></h1>
+                        
+                        <h2>PHẦN 1: Nghe và nhắc lại (听后重复)</h2>
+                        ${p1Content}
+
+                        <h2>PHẦN 2: Mô tả tranh cho trước (看图说话)</h2>
+                        ${p2Content}
+
+                        <h2>PHẦN 3: Trả lời câu hỏi nghị luận (回答问题)</h2>
+                        ${p3Content}
+                    </body>
+                    </html>
+                `;
+
                 const printWindow = window.open('', '_blank');
-                if (printWindow) { printWindow.document.write(printContent); printWindow.document.close(); } else { alert("Vui lòng cho phép mở cửa sổ mới (Pop-up) để in!"); }
+                if (printWindow) {
+                    printWindow.document.write(printContent);
+                    printWindow.document.close();
+                } else {
+                    alert("Vui lòng cho phép mở cửa sổ mới (Pop-up) để in!");
+                }
             },
 
             confirmDelete(examId, event) {
                 event.stopPropagation();
                 this.state.targetDeleteId = examId;
                 document.getElementById('delete-modal').classList.remove('hidden');
-                document.getElementById('btn-confirm-delete').onclick = () => { MockFileSystem.deleteExam(this.state.targetDeleteId); document.getElementById('delete-modal').classList.add('hidden'); this.renderDashboard(); };
+                document.getElementById('btn-confirm-delete').onclick = () => {
+                    MockFileSystem.deleteExam(this.state.targetDeleteId);
+                    document.getElementById('delete-modal').classList.add('hidden');
+                    this.renderDashboard();
+                };
             },
             openEditModal(examId, event) {
                 event.stopPropagation();
@@ -715,9 +770,13 @@
                     const newId = document.getElementById('edit-exam-id').value;
                     if(!newId) return alert("ID không được để trống!");
                     const success = MockFileSystem.updateExam(this.state.targetEditId, newId, newTitle);
-                    if(success) { document.getElementById('edit-modal').classList.add('hidden'); this.renderDashboard(); } else { alert("ID mới đã tồn tại hoặc có lỗi!"); }
+                    if(success) {
+                        document.getElementById('edit-modal').classList.add('hidden');
+                        this.renderDashboard();
+                    } else { alert("ID mới đã tồn tại hoặc có lỗi!"); }
                 };
             },
+            
             editExamContent(examId, event) {
                 if(event) event.stopPropagation();
                 const data = MockFileSystem.getFullExamData(examId);
@@ -738,6 +797,7 @@
                 this.renderAIEditor();
                 document.getElementById('ai-prompt-p1').value = meta.p1Prompt || "";
             },
+            
             showPartIntro(partNum) {
                 const container = document.getElementById('app-container');
                 const tpl = document.getElementById('tpl-part-intro').content.cloneNode(true);
@@ -749,40 +809,102 @@
                 tpl.querySelector('.btn-start-part').onclick = () => { if(partNum===1)this.startPart1(); else if(partNum===2)this.startPart2(); else if(partNum===3)this.startPart3(); };
                 container.innerHTML = ''; container.appendChild(tpl);
             },
+
             markExamComplete(examId) {
                 this.state.completedExams.add(examId);
                 localStorage.setItem('hskk_completed_exams', JSON.stringify([...this.state.completedExams]));
             },
+
+   renderDashboard() {
+                const container = document.getElementById('app-container');
+                const tpl = document.getElementById('tpl-dashboard').content.cloneNode(true);
+                const list = tpl.querySelector('#exam-list');
+                document.getElementById('control-bar').classList.add('hidden');
+                
+                // Ẩn nút tạo mới nếu là chế độ Offline
+                if (this.state.isExternal) { const createCard = list.querySelector('#create-new-card'); if (createCard) createCard.remove(); }
+                
+                const allExams = MockFileSystem.getExamSets();
+                const completed = allExams.filter(id => this.state.completedExams.has(id));
+                const uncompleted = allExams.filter(id => !this.state.completedExams.has(id));
+                const sortedExams = [...uncompleted, ...completed];
+                
+                sortedExams.forEach(examId => {
+                    const card = document.createElement('div');
+                    const isCompleted = this.state.completedExams.has(examId);
+                    
+                    // Style nền: Nếu đã làm xong thì xanh nhạt, chưa làm thì trắng
+                    const bgClass = isCompleted ? "bg-green-50/60 border-green-200" : "bg-white border-gray-100";
+                    
+                    // CLASS THẺ MỚI: p-4 (nhỏ hơn), flex row, relative để chứa các nút absoulte
+                    card.className = `${bgClass} group relative p-8 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer border hover:border-blue-400 overflow-hidden`;
+                    
+                    const isAI = examId.includes('ai_');
+                    const examData = MockFileSystem.getFullExamData(examId);
+                    let titleDisplay = examData.title;
+                    if (!titleDisplay) titleDisplay = isAI ? `Đề AI: ${new Date(parseInt(examId.split('_')[2]||0)).toLocaleString('vi-VN')}` : `${examId}`;
+
+                    // Badge "Đã làm" - Đưa lên góc trái trên cùng, nhỏ xinh
+                    const completedBadge = isCompleted ? `<div class="absolute top-0 left-0 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-br-lg font-bold z-10 shadow-sm"><i class="fa-solid fa-check mr-1"></i>Đã làm</div>` : '';
+                    
+                    // Badge Read-only cho chế độ offline
+                    const readOnlyBadge = this.state.isExternal ? `<span class="ml-1 text-[9px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 font-bold uppercase tracking-wider">Read-only</span>` : '';
+
+                    // THANH CÔNG CỤ (ACTION BAR) - CHỈNH SỬA QUAN TRỌNG NHẤT
+                    // 1. absolute inset-y-0 right-0: Phủ bên phải
+                    // 2. opacity-0 group-hover:opacity-100: Ẩn hiện khi hover
+                    // 3. Bao gồm cả các nút Export và nút Edit
+const actionButtons = `
+    <div class="absolute bottom-0 right-0 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
+        <div class="flex gap-1 bg-transparent   rounded-lg p-1">
+            ${!this.state.isExternal ? `
+                <button onclick="App.editExamContent('${examId}', event)" class="w-6 h-6 rounded hover:bg-emerald-50 text-emerald-600 flex items-center justify-center transition" title="Sửa nội dung"><i class="fa-solid fa-file-pen"></i></button>
+                <button onclick="App.openEditModal('${examId}', event)" class="w-6 h-6 rounded hover:bg-blue-50 text-gray-500 hover:text-blue-600 flex items-center justify-center transition" title="Sửa tên/ID"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="App.confirmDelete('${examId}', event)" class="w-6 h-6 rounded hover:bg-red-50 text-gray-500 hover:text-red-600 flex items-center justify-center transition" title="Xóa đề"><i class="fa-solid fa-trash"></i></button>
+                <div class="w-px h-5 bg-gray-200 mx-1 self-center"></div>
+            ` : ''}
             
-            // --- NEW BATCH GRADING FEATURE ---
-            async gradeAll() {
-                const buttons = Array.from(document.querySelectorAll('.btn-grade-item:not(.hidden)'));
-                if (buttons.length === 0) return alert("Đã chấm hết hoặc không có bài để chấm!");
+            <button onclick="App.exportWord('${examId}', event)" class="w-6 h-6 rounded hover:bg-blue-50 text-blue-600 flex items-center justify-center transition" title="Xuất Word"><i class="fa-solid fa-file-word"></i></button>
+            <button onclick="App.exportTxt('${examId}', event)" class="w-6 h-6 rounded hover:bg-gray-100 text-gray-600 flex items-center justify-center transition" title="Xuất TXT"><i class="fa-solid fa-file-lines"></i></button>
+            <button onclick="App.exportJson('${examId}', event)" class="w-6 h-6 rounded hover:bg-amber-50 text-amber-600 flex items-center justify-center transition" title="Xuất JSON"><i class="fa-solid fa-code"></i></button>
+            <button onclick="App.printExam('${examId}', event)" class="w-6 h-6 rounded hover:bg-emerald-50 text-emerald-600 flex items-center justify-center transition" title="In đề"><i class="fa-solid fa-print"></i></button>
+        </div>
+    </div>
+`;
 
-                const btnGradeAll = document.getElementById('btn-grade-all');
-                if(btnGradeAll) {
-                    btnGradeAll.disabled = true;
-                    btnGradeAll.classList.add('opacity-75', 'cursor-not-allowed');
-                }
-
-                for (let i = 0; i < buttons.length; i++) {
-                    const btn = buttons[i];
-                    if(btnGradeAll) btnGradeAll.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang chấm ${i+1}/${buttons.length}...`;
-                    const uuid = btn.dataset.uuid;
-                    btn.closest('.bg-white').scrollIntoView({behavior: "smooth", block: "center"});
-                    await this.gradeItem(uuid, btn);
-                    await new Promise(r => setTimeout(r, 1000));
-                }
-
-                if(btnGradeAll) {
-                    btnGradeAll.innerHTML = '<i class="fa-solid fa-check-double mr-2"></i> Đã chấm xong';
-                    btnGradeAll.classList.replace('bg-purple-600', 'bg-green-600');
-                    btnGradeAll.classList.replace('hover:bg-purple-700', 'hover:bg-green-700');
-                }
-                alert("Đã hoàn tất chấm điểm tất cả!");
+                    // Nội dung thẻ: Layout ngang (Flex row)
+                    card.innerHTML = `
+                        ${completedBadge}
+                        ${actionButtons}
+                        <div class="flex items-center gap-4 w-full">
+                            <div class="w-12 h-12 shrink-0 ${isCompleted ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-blue-600'} rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
+                                <i class="fa-solid fa-file-contract text-xl"></i>
+                            </div>
+                            
+                            <div class="flex-1 min-w-0 flex flex-col justify-center">
+                                <h3 class="text-base font-bold text-gray-800 truncate pr-2 group-hover:text-blue-600 transition-colors" title="${titleDisplay}">${titleDisplay}</h3>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="text-[10px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">ID: ${examId}</span>
+                                    ${readOnlyBadge}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Sự kiện click vào thẻ để làm bài (trừ khi click vào nút con)
+                    card.onclick = (e) => { 
+                        if(e.target.closest('button')) return; 
+                        this.resetExamState(); 
+                        this.loadExamData(examId); 
+                        this.showPartIntro(1); 
+                    };
+                    list.appendChild(card);
+                });
+                
+                container.innerHTML = ''; container.appendChild(tpl);
             },
-
-            // --- MISSING FUNCTIONS RESTORED ---
+            
+            // --- AI CREATION FUNCTIONS (Same as v10) ---
             async openAICreator() {
                 const modal = document.getElementById('ai-modal');
                 this.state.editingExamId = null;
@@ -793,12 +915,12 @@
             closeAIModal() { document.getElementById('ai-modal').classList.add('hidden'); },
             async initAIExam() {
                 const p1 = await AI_SERVICE.generateP1("Cuộc sống hàng ngày");
-                this.state.tempAIExam = { p1: p1, p2: [{img:"https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600", userPrompt: "meeting", text1:"Đang tải...", req:""}, {img:"https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=600", userPrompt: "reading", text1:"Đang tải...", req:""}], p3: [{q:"你觉得学外语重要吗？", a:"Đang tải...", req:""}, {q:"介绍一下你的家乡。", a:"Đang tải...", req:""}] };
+                this.state.tempAIExam = { p1: p1, p2: [{img:"https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600", userPrompt: "meeting", text1:"Đang tải..."}, {img:"https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=600", userPrompt: "reading", text1:"Đang tải..."}], p3: [{q:"你觉得学外语重要吗？", a:"Đang tải..."}, {q:"介绍一下你的家乡。", a:"Đang tải..."}] };
                 this.renderAIEditor(); this.lazyLoadRest();
             },
             async lazyLoadRest() {
-                for (let i = 0; i < 2; i++) { const t1 = await AI_SERVICE.generateP2Essay(this.state.tempAIExam.p2[i].userPrompt, 'roleplay', ''); this.state.tempAIExam.p2[i].text1 = t1; this.updateP2UI(i); }
-                for (let i = 0; i < 2; i++) { const a = await AI_SERVICE.generateP3Essay(this.state.tempAIExam.p3[i].q, ''); this.state.tempAIExam.p3[i].a = a; this.updateP3UI(i); }
+                for (let i = 0; i < 2; i++) { const t1 = await AI_SERVICE.generateP2Essay(this.state.tempAIExam.p2[i].userPrompt, 'roleplay'); this.state.tempAIExam.p2[i].text1 = t1; this.updateP2UI(i); }
+                for (let i = 0; i < 2; i++) { const a = await AI_SERVICE.generateP3Essay(this.state.tempAIExam.p3[i].q); this.state.tempAIExam.p3[i].a = a; this.updateP3UI(i); }
             },
             updateP2UI(i) {
                 if(document.getElementById(`ai-input-p2-${i}-text1`)) {
@@ -842,37 +964,108 @@
                 });
                 this.state.editingExamId = null; this.closeAIModal(); this.init();
             },
-
-            renderDashboard() {
-                const container = document.getElementById('app-container');
-                const tpl = document.getElementById('tpl-dashboard').content.cloneNode(true);
-                const list = tpl.querySelector('#exam-list');
-                document.getElementById('control-bar').classList.add('hidden');
-                
-                if (this.state.isExternal) { const createCard = list.querySelector('#create-new-card'); if (createCard) createCard.remove(); }
-                
-                const allExams = MockFileSystem.getExamSets();
-                const completed = allExams.filter(id => this.state.completedExams.has(id));
-                const uncompleted = allExams.filter(id => !this.state.completedExams.has(id));
-                const sortedExams = [...uncompleted, ...completed];
-                
-                sortedExams.forEach(examId => {
-                    const card = document.createElement('div');
-                    const isCompleted = this.state.completedExams.has(examId);
-                    const bgClass = isCompleted ? "bg-green-50 border-green-200" : "bg-white border-transparent";
-                    card.className = `${bgClass} p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border hover:border-blue-500 relative overflow-hidden group flex flex-col`;
-                    const isAI = examId.includes('ai_');
-                    const examData = MockFileSystem.getFullExamData(examId);
-                    let titleDisplay = examData.title;
-                    if (!titleDisplay) titleDisplay = isAI ? `Đề AI: ${new Date(parseInt(examId.split('_')[2]||0)).toLocaleString('vi-VN')}` : `${examId}`;
-                    const editActions = !this.state.isExternal ? `<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="App.editExamContent('${examId}', event)" class="w-7 h-7 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-600 flex items-center justify-center transition" title="Sửa nội dung"><i class="fa-solid fa-file-pen text-xs"></i></button><button onclick="App.openEditModal('${examId}', event)" class="w-7 h-7 rounded-full bg-gray-100 hover:bg-blue-100 text-gray-500 hover:text-blue-600 flex items-center justify-center transition" title="Sửa tên/ID"><i class="fa-solid fa-pen text-xs"></i></button><button onclick="App.confirmDelete('${examId}', event)" class="w-7 h-7 rounded-full bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-600 flex items-center justify-center transition" title="Xóa đề"><i class="fa-solid fa-trash text-xs"></i></button></div>` : `<span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded">Read-only</span>`;
-                    const completedBadge = isCompleted ? `<div class="absolute top-0 right-0 bg-green-500 text-white text-[10px] px-2 py-1 rounded-bl-lg font-bold"><i class="fa-solid fa-check mr-1"></i>Đã làm</div>` : '';
-                    card.innerHTML = `${completedBadge}<div class="flex justify-between items-start mb-2"><div class="flex items-center gap-3"><div class="w-10 h-10 ${isCompleted ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-blue-600'} rounded-lg flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors"><i class="fa-solid fa-file-contract"></i></div><span class="text-xs font-bold text-gray-400 uppercase tracking-wide">HSKK Exam</span></div>${editActions}</div><h3 class="text-lg font-bold text-gray-800 capitalize mb-1 truncate pr-4" title="${titleDisplay}">${titleDisplay}</h3><p class="text-xs text-gray-400 mb-4 font-mono">ID: ${examId}</p><div class="grid grid-cols-4 gap-2 mt-auto pt-4 border-t border-gray-100 mb-4"><button onclick="App.exportWord('${examId}', event)" class="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition"><i class="fa-solid fa-file-word text-lg mb-1"></i><span class="text-[10px] font-bold">Word</span></button><button onclick="App.exportTxt('${examId}', event)" class="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition"><i class="fa-solid fa-file-lines text-lg mb-1"></i><span class="text-[10px] font-bold">TXT</span></button><button onclick="App.exportJson('${examId}', event)" class="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-amber-50 text-amber-600 transition"><i class="fa-solid fa-code text-lg mb-1"></i><span class="text-[10px] font-bold">JSON</span></button><button onclick="App.printExam('${examId}', event)" class="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-emerald-50 text-emerald-600 transition"><i class="fa-solid fa-print text-lg mb-1"></i><span class="text-[10px] font-bold">Print</span></button></div><div class="w-full py-2 ${isCompleted ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'} text-white text-center rounded-lg font-bold text-sm shadow opacity-0 group-hover:opacity-100 transition-opacity">${isCompleted ? 'Làm lại bài' : 'Làm bài thi'} <i class="fa-solid fa-play ml-1"></i></div>`;
-                    card.onclick = (e) => { if(e.target.closest('button')) return; this.resetExamState(); this.loadExamData(examId); this.showPartIntro(1); };
-                    list.appendChild(card);
-                });
-                container.innerHTML = ''; container.appendChild(tpl);
+            importJSON() {
+                const input = document.createElement('input');
+                input.type = 'file'; input.accept = '.json';
+                input.onchange = e => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = event => {
+                        try {
+                            const data = JSON.parse(event.target.result);
+                            if (!data || (typeof data !== 'object')) throw new Error("Invalid JSON structure");
+                            const newId = `import_${Date.now()}`;
+                            MockFileSystem.addExam(newId, data);
+                            alert("Nhập dữ liệu thành công!");
+                            this.renderDashboard();
+                        } catch(err) { 
+                            console.error(err);
+                            alert("Lỗi: File JSON không hợp lệ hoặc cấu trúc sai."); 
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
             },
+            
+            startPart1() { document.getElementById('app-container').innerHTML = ''; document.getElementById('app-container').appendChild(document.getElementById('tpl-part-1').content.cloneNode(true)); this.playPart1Sequence(); },
+            async playPart1Sequence() {
+                if(this.state.p1Index >= 10) { this.showPartIntro(2); return; }
+                const ui = document.getElementById('p1-current-index'); const bar = document.getElementById('p1-progress');
+                ui.innerText = this.state.p1Index + 1; bar.style.width = `${((this.state.p1Index)/10)*100}%`;
+                document.getElementById('p1-state-listen').classList.remove('hidden'); document.getElementById('p1-state-wait').classList.add('hidden'); document.getElementById('p1-state-record').classList.add('hidden');
+                await new Promise(r=>setTimeout(r,1000));
+                AudioEngine.speak(this.state.p1Data[this.state.p1Index], 'zh-CN', async () => {
+                    document.getElementById('p1-state-listen').classList.add('hidden'); document.getElementById('p1-state-wait').classList.remove('hidden');
+                    for(let i=3; i>0; i--) { document.getElementById('p1-countdown').innerText = i; await new Promise(r=>setTimeout(r,1000)); }
+                    document.getElementById('p1-state-wait').classList.add('hidden'); document.getElementById('p1-state-record').classList.remove('hidden');
+                    AudioEngine.playTing(); this.startRecording();
+                    setTimeout(() => { this.stopRecording(blob => { this.state.userRecordings.p1.push({index:this.state.p1Index, original:this.state.p1Data[this.state.p1Index], audio:blob}); this.state.p1Index++; this.playPart1Sequence(); }); }, 8000);
+                });
+            },
+            startPart2() { this.renderVisualQA('part2'); },
+            startPart3() { this.renderVisualQA('part3'); },
+            renderVisualQA(mode) {
+                const isP2 = mode === 'part2'; const data = isP2 ? this.state.p2Data : this.state.p3Data; const idx = isP2 ? this.state.p2Index : this.state.p3Index; const item = data[idx];
+                const tpl = document.getElementById('tpl-visual-qa').content.cloneNode(true);
+                document.getElementById('app-container').innerHTML = '';
+                tpl.querySelector('.part-label').innerText = isP2 ? `Phần 2 - Hình ${idx+1}/2` : `Phần 3 - Câu ${idx+1}/2`;
+                const stim = tpl.getElementById('stimulus-container');
+                if(isP2) stim.innerHTML = `<img src="${item.img}" class="h-full w-full object-contain max-h-[40vh] rounded-lg shadow-sm">`;
+                else stim.innerHTML = `<div class="p-6 text-2xl font-bold text-center chinese-text leading-relaxed text-gray-800">${item.question}</div><div class="mt-6 text-blue-500 cursor-pointer text-center w-12 h-12 mx-auto bg-blue-50 rounded-full flex items-center justify-center hover:bg-blue-100 transition" onclick="AudioEngine.speak('${item.question}')"><i class="fa-solid fa-volume-high text-xl"></i></div>`;
+                tpl.getElementById('tab-hanzi').innerText = item.hanzi; tpl.getElementById('tab-pinyin').innerText = item.pinyin; tpl.getElementById('tab-meaning').innerText = item.meaning;
+                document.getElementById('app-container').appendChild(tpl); document.getElementById('control-bar').classList.remove('hidden'); this.setupQA(mode, item, idx, data.length);
+            },
+            setupQA(mode, item, idx, total) {
+                const btnRec = document.getElementById('btn-record-toggle'); const btnNext = document.getElementById('btn-next'); const btnHint = document.querySelector('.btn-toggle-hint');
+                let isRec = false, timer, startT, blob = null;
+                document.querySelectorAll('.tab-btn').forEach(b => b.onclick = (e) => { document.querySelectorAll('.tab-btn').forEach(x => {x.classList.remove('tab-active', 'bg-white', 'shadow'); x.classList.add('tab-inactive')}); e.target.classList.add('tab-active', 'bg-white', 'shadow'); e.target.classList.remove('tab-inactive'); document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden')); document.getElementById(`tab-${e.target.dataset.tab}`).classList.remove('hidden'); });
+                btnHint.onclick = () => { const p = document.getElementById('answer-panel'); p.classList.remove('opacity-50','pointer-events-none','filter','blur-sm'); if(window.innerWidth < 1024) p.scrollIntoView({behavior:'smooth'}); };
+                document.getElementById('btn-speak-sample').onclick = () => AudioEngine.speak(item.hanzi);
+                btnRec.onclick = () => {
+                    if(!isRec) { isRec=true; btnRec.innerHTML = '<i class="fa-solid fa-stop text-2xl"></i>'; btnRec.classList.add('recording-pulse','bg-gray-800','border-gray-200'); btnRec.classList.remove('bg-red-500','border-red-100'); startT = Date.now(); timer = setInterval(() => { const d = Math.floor((Date.now()-startT)/1000); document.getElementById('recording-timer').innerText = `00:${d<10?'0'+d:d}`; }, 1000); this.startRecording(); }
+                    else { isRec=false; clearInterval(timer); btnRec.classList.remove('recording-pulse','bg-gray-800','border-gray-200'); btnRec.classList.add('bg-red-500','border-red-100'); btnRec.innerHTML = '<i class="fa-solid fa-microphone text-2xl sm:text-3xl"></i>'; this.stopRecording(b => { blob=b; document.getElementById('recording-ui').classList.add('hidden'); document.getElementById('playback-ui').classList.remove('hidden'); document.getElementById('user-playback-audio').src = URL.createObjectURL(b); }); }
+                };
+                document.getElementById('btn-rerecord').onclick = () => { blob=null; document.getElementById('playback-ui').classList.add('hidden'); document.getElementById('recording-ui').classList.remove('hidden'); };
+                btnNext.onclick = () => {
+                    if(isRec || !blob) { alert("Vui lòng ghi âm xong."); return; }
+                    const store = mode === 'part2' ? this.state.userRecordings.p2 : this.state.userRecordings.p3; store.push({index:idx, item:item, audio:blob});
+                    if(mode === 'part2') { this.state.p2Index++; if(this.state.p2Index < total) this.renderVisualQA('part2'); else this.showPartIntro(3); }
+                    else { this.state.p3Index++; if(this.state.p3Index < total) this.renderVisualQA('part3'); else this.renderReview(); }
+                };
+            },
+            renderReview() {
+                const c = document.getElementById('app-container'); const t = document.getElementById('tpl-review').content.cloneNode(true);
+                document.getElementById('control-bar').classList.add('hidden');
+                this.state.userRecordings.p1.forEach((r,i) => t.getElementById('review-p1-list').appendChild(this.createRow(`Câu ${i+1}`, r.original, null, r.audio, null, { type: 'p1', referenceText: r.original })));
+                this.state.userRecordings.p2.forEach((r,i) => t.getElementById('review-p2-list').appendChild(this.createRow(`Hình ${i+1}`, r.item.hanzi, r.item.img, r.audio, "Mô tả tranh", { type: 'p2', referenceText: r.item.hanzi })));
+                this.state.userRecordings.p3.forEach((r,i) => t.getElementById('review-p3-list').appendChild(this.createRow(`Câu ${i+1}`, r.item.hanzi, null, r.audio, r.item.question, { type: 'p3', question: r.item.question })));
+                c.innerHTML=''; c.appendChild(t);
+            },
+            createRow(lbl, txt, img, aud, q, contextInfo) {
+                const d = document.createElement('div'); d.className = "bg-white p-5 rounded-xl shadow-sm border border-gray-200 transition-all hover:shadow-md";
+                const uuid = 'grade-' + Math.random().toString(36).substr(2, 9);
+                d.innerHTML = `<div class="flex flex-col sm:flex-row gap-4 mb-4"><div class="flex-1"><div class="font-bold text-blue-800 text-lg mb-2">${lbl}</div>${q ? `<div class="bg-blue-50 p-3 rounded-lg text-sm text-gray-700 font-medium mb-3 border-l-4 border-blue-400">"${q}"</div>` : ''}<div class="bg-gray-50 rounded-xl p-3 border border-gray-100"><audio controls src="${URL.createObjectURL(aud)}" class="w-full mb-2"></audio><div class="text-xs text-gray-400 text-center">Ghi âm của bạn</div></div></div>${img ? `<div class="w-full sm:w-40 h-40 shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200"><img src="${img}" class="w-full h-full object-cover"></div>` : ''}</div><div class="border-t border-gray-100 pt-4"><div id="${uuid}-controls"><button onclick="App.gradeItem('${uuid}', this)" class="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-lg font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm"><i class="fa-solid fa-wand-magic-sparkles"></i> Chấm điểm (AI)</button></div><div id="${uuid}-result" class="hidden mt-4 animate-fade-in"></div></div><div class="mt-4 pt-3 border-t border-dashed border-gray-200"><details class="text-xs text-gray-500"><summary class="cursor-pointer hover:text-blue-600 font-semibold">Xem đáp án mẫu</summary><p class="mt-2 p-3 bg-gray-50 rounded border border-gray-100 text-justify leading-relaxed chinese-text text-base text-gray-700">${txt}</p></details></div>`;
+                d.dataset.contextInfo = JSON.stringify(contextInfo); d._audioBlob = aud;
+                return d;
+            },
+            async gradeItem(uuid, btn) {
+                // If External, prevent grading
+                if(this.state.isExternal) { alert("Chức năng chấm điểm AI không khả dụng ở chế độ Offline Reader."); return; }
+                
+                const container = document.getElementById(`${uuid}-result`);
+                const parent = container.closest('div');
+                const contextInfo = JSON.parse(parent.dataset.contextInfo);
+                const audioBlob = parent._audioBlob;
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Đang phân tích...'; btn.classList.add('opacity-75', 'cursor-not-allowed'); btn.disabled = true;
+                const result = await AI_SERVICE.evaluateAudio(audioBlob, contextInfo);
+                btn.classList.add('hidden'); container.classList.remove('hidden');
+                let scoreColor = result.score >= 80 ? 'grade-good' : (result.score < 60 ? 'grade-bad' : 'grade-avg');
+                container.innerHTML = `<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden ${scoreColor} grade-card"><div class="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center"><h4 class="font-bold text-gray-700"><i class="fa-solid fa-robot mr-2 text-blue-500"></i>Đánh giá AI</h4><div class="flex items-center gap-2"><span class="text-xs font-bold text-gray-400 uppercase">Điểm số</span><span class="text-2xl font-black ${scoreColor === 'grade-good' ? 'text-green-600' : 'text-yellow-600'}">${result.score}</span></div></div><div class="p-4 space-y-4"><div><h5 class="text-xs font-bold text-gray-400 uppercase mb-1">Nhận xét</h5><p class="text-sm text-gray-700 leading-relaxed">${result.comment}</p></div>${result.errors.length > 0 ? `<div><h5 class="text-xs font-bold text-red-400 uppercase mb-2">Lỗi</h5><ul class="space-y-2">${result.errors.map(e => `<li class="flex gap-2 text-sm text-gray-600 bg-red-50 p-2 rounded border border-red-100"><i class="fa-solid fa-circle-exclamation text-red-500 mt-0.5 text-xs"></i><span><strong class="text-red-700">${e.type}:</strong> ${e.desc}</span></li>`).join('')}</ul></div>` : '<div class="text-sm text-green-600 italic"><i class="fa-solid fa-check-circle mr-1"></i>Không lỗi nghiêm trọng.</div>'}${result.correction ? `<div><h5 class="text-xs font-bold text-green-500 uppercase mb-1">Gợi ý</h5><div class="bg-green-50 p-3 rounded-lg border border-green-100 text-green-800 text-sm"><i class="fa-solid fa-pen-nib text-green-600 mr-2"></i>${result.correction}</div></div>` : ''}</div></div>`;
+            },
+            async startRecording() { try { const s = await navigator.mediaDevices.getUserMedia({audio:true}); this.state.mediaRecorder=new MediaRecorder(s); this.state.audioChunks=[]; this.state.mediaRecorder.ondataavailable=e=>this.state.audioChunks.push(e.data); this.state.mediaRecorder.start(); } catch(e){alert("Mic Error");} },
+            stopRecording(cb) { if(this.state.mediaRecorder && this.state.mediaRecorder.state!=='inactive') { this.state.mediaRecorder.onstop=()=>{ const b=new Blob(this.state.audioChunks,{type:'audio/wav'}); this.state.mediaRecorder.stream.getTracks().forEach(t=>t.stop()); cb(b); }; this.state.mediaRecorder.stop(); } }
         };
         document.addEventListener('DOMContentLoaded', () => App.init());
     </script>
