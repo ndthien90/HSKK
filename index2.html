@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HSKK Trung Cấp - Luyện Thi Chuyên Nghiệp</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .chinese-text {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        .recording-pulse {
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 3px;
+        }
+        .tab-active {
+            border-bottom: 2px solid #3b82f6;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .tab-inactive {
+            color: #64748b;
+        }
+        /* Audio Player Styling */
+        audio {
+            height: 36px;
+            width: 100%;
+            border-radius: 18px;
+        }
+        /* Mobile optimization for text sizing */
+        @media (max-width: 640px) {
+            .chinese-text { font-size: 1.25rem !important; line-height: 1.75 !important; }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-gray-800 bg-gray-50">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm z-20 shrink-0">
+        <div class="max-w-7xl mx-auto px-4 h-14 sm:h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-dragon text-blue-600 text-xl sm:text-2xl"></i>
+                <h1 class="text-lg sm:text-xl font-bold text-gray-900 tracking-wide truncate">HSKK MASTER <span class="hidden sm:inline text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full ml-1">Trung Cấp</span></h1>
+            </div>
+            <div id="exam-timer" class="hidden font-mono text-base sm:text-lg font-bold text-blue-600 bg-blue-50 px-2 sm:px-3 py-1 rounded-md">
+                00:00
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:p-6 scroll-smooth" id="app-container">
+        <!-- Content will be injected here via JS -->
+    </main>
+
+    <!-- Footer Control Bar (Sticky) -->
+    <footer class="bg-white border-t border-gray-200 p-3 sm:p-4 hidden z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]" id="control-bar">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <button id="btn-prev" class="invisible px-3 sm:px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 text-sm sm:text-base">
+                <i class="fa-solid fa-chevron-left mr-1 sm:mr-2"></i> <span class="hidden sm:inline">Trước</span>
+            </button>
+            
+            <div class="flex gap-2" id="action-buttons"></div>
+
+            <button id="btn-next" class="px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md transition-all flex items-center text-sm sm:text-base font-semibold active:scale-95">
+                Tiếp theo <i class="fa-solid fa-chevron-right ml-2"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Templates -->
+
+    <!-- 1. Dashboard Template -->
+    <template id="tpl-dashboard">
+        <div class="max-w-5xl mx-auto mt-4 sm:mt-10 pb-10">
+            <div class="text-center mb-8 sm:mb-12">
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Hệ thống luyện thi HSKK</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base px-2">Chọn bộ đề thi bên dưới để bắt đầu. Mô phỏng chính xác cấu trúc bài thi thực tế.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" id="exam-list">
+                <!-- Exam items injected here -->
+            </div>
+        </div>
+    </template>
+
+    <!-- 2. Part Intro Template -->
+    <template id="tpl-part-intro">
+        <div class="flex flex-col items-center justify-center h-full text-center space-y-4 sm:space-y-6 px-4">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-2xl sm:text-3xl mb-2">
+                <i class="part-icon fa-solid"></i>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-bold part-title text-gray-800"></h2>
+            <p class="text-gray-600 max-w-md part-desc text-sm sm:text-base"></p>
+            <button class="btn-start-part mt-4 sm:mt-8 px-6 sm:px-8 py-2 sm:py-3 bg-blue-600 text-white rounded-full font-bold shadow-lg hover:bg-blue-700 transform transition hover:-translate-y-1 active:scale-95">
+                Bắt đầu phần này
+            </button>
+        </div>
+    </template>
+
+    <!-- 3. Part 1: Listen & Repeat -->
+    <template id="tpl-part-1">
+        <div class="max-w-2xl mx-auto h-full flex flex-col justify-center pb-10">
+            <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 text-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gray-100">
+                    <div id="p1-progress" class="h-full bg-blue-500 transition-all duration-300" style="width: 0%"></div>
+                </div>
+                
+                <div class="mb-6 sm:mb-8 mt-4">
+                    <span class="text-xs sm:text-sm uppercase tracking-wider text-gray-500 font-semibold bg-gray-100 px-3 py-1 rounded-full">Câu số <span id="p1-current-index" class="text-blue-600 font-bold">1</span>/10</span>
+                </div>
+
+                <!-- State: Listening -->
+                <div id="p1-state-listen" class="py-6 sm:py-10">
+                    <div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-blue-50 rounded-full flex items-center justify-center mb-6 animate-pulse ring-4 ring-blue-50">
+                        <i class="fa-solid fa-volume-high text-3xl sm:text-4xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Đang phát câu mẫu...</h3>
+                    <p class="text-sm text-gray-500 mt-2">Hãy lắng nghe thật kỹ</p>
+                </div>
+
+                <!-- State: Waiting -->
+                <div id="p1-state-wait" class="py-6 sm:py-10 hidden">
+                    <div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-yellow-50 rounded-full flex items-center justify-center mb-6 ring-4 ring-yellow-50">
+                        <span class="text-3xl sm:text-4xl font-bold text-yellow-600" id="p1-countdown">3</span>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Chuẩn bị nhắc lại...</h3>
+                </div>
+
+                <!-- State: Recording -->
+                <div id="p1-state-record" class="py-6 sm:py-10 hidden">
+                    <div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-red-50 rounded-full flex items-center justify-center mb-6 recording-pulse border-2 border-red-100">
+                        <i class="fa-solid fa-microphone text-3xl sm:text-4xl text-red-600"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Đang ghi âm</h3>
+                    <p class="text-sm text-gray-500 mt-2">Nói to, rõ ràng...</p>
+                </div>
+
+                <div id="p1-status-msg" class="mt-4 text-xs sm:text-sm text-gray-400 min-h-[20px] font-medium"></div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 4. Part 2 & 3: Layout Optimized -->
+    <template id="tpl-visual-qa">
+        <div class="max-w-6xl mx-auto flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6 pb-24">
+            <!-- Left: Stimulus & Recording Area -->
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-5 flex flex-col order-1">
+                <div class="flex justify-between items-center mb-3 sm:mb-4">
+                    <h3 class="font-bold text-gray-700 uppercase tracking-wide part-label text-sm sm:text-base">Phần 2 - Hình 1</h3>
+                    <button class="btn-toggle-hint text-blue-600 text-xs sm:text-sm hover:underline font-medium"><i class="fa-regular fa-lightbulb mr-1"></i> Đáp án</button>
+                </div>
+                
+                <!-- Stimulus Content -->
+                <div id="stimulus-container" class="flex-1 flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 min-h-[200px] sm:min-h-[250px] relative mb-4 p-2">
+                    <!-- Image or Text injected here. Images will have max-height constraint for mobile -->
+                </div>
+
+                <!-- Recording Controls -->
+                <div class="border-t pt-4 bg-gray-50 rounded-lg p-3 sm:p-4">
+                    <div id="recording-ui">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs sm:text-sm font-semibold text-gray-600">Ghi âm trả lời:</span>
+                            <span id="recording-timer" class="font-mono font-bold text-red-600 text-lg sm:text-xl">00:00</span>
+                        </div>
+                        <div class="flex flex-col items-center justify-center gap-2">
+                            <button id="btn-record-toggle" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg flex items-center justify-center transition-all transform active:scale-95 ring-4 ring-red-100">
+                                <i class="fa-solid fa-microphone text-xl sm:text-2xl"></i>
+                            </button>
+                            <span class="text-xs sm:text-sm text-gray-500 italic" id="record-status-text">Nhấn mic để nói</span>
+                        </div>
+                    </div>
+
+                    <!-- Playback UI -->
+                    <div id="playback-ui" class="hidden flex flex-col gap-2">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs sm:text-sm font-semibold text-green-700 flex items-center"><i class="fa-solid fa-check-circle mr-1"></i> Đã thu âm</span>
+                            <button id="btn-rerecord" class="text-xs text-red-500 hover:text-red-700 font-bold px-2 py-1 hover:bg-red-50 rounded transition-colors"><i class="fa-solid fa-rotate-left mr-1"></i>Thu lại</button>
+                        </div>
+                        <audio id="user-playback-audio" controls class="w-full bg-gray-200 rounded-full"></audio>
+                        <p class="text-[10px] sm:text-xs text-center text-gray-400 mt-1">Nghe lại để kiểm tra trước khi Tiếp theo</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Answer/Hint (Mobile: Below, Desktop: Side) -->
+            <div id="answer-panel" class="bg-white rounded-xl shadow-md p-0 flex flex-col h-auto min-h-[300px] lg:h-auto opacity-50 pointer-events-none transition-opacity duration-300 filter blur-sm order-2 mb-20 lg:mb-0">
+                <div class="bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 rounded-t-xl flex justify-between items-center sticky top-0 z-10">
+                    <div class="flex gap-4 sm:gap-6 text-xs sm:text-sm font-medium">
+                        <button class="tab-btn tab-active py-2 transition-colors" data-tab="hanzi">Chữ Hán</button>
+                        <button class="tab-btn tab-inactive py-2 hover:text-blue-600 transition-colors" data-tab="pinyin">Pinyin</button>
+                        <button class="tab-btn tab-inactive py-2 hover:text-blue-600 transition-colors" data-tab="meaning">Nghĩa</button>
+                    </div>
+                    <button id="btn-speak-sample" class="text-blue-500 hover:text-blue-700 bg-white p-2 rounded-full shadow-sm active:scale-90 transition-transform" title="Đọc bài mẫu">
+                        <i class="fa-solid fa-volume-high text-base"></i>
+                    </button>
+                </div>
+                
+                <div class="p-4 sm:p-6 flex-1 overflow-y-auto max-h-[50vh] lg:max-h-full">
+                    <div id="tab-hanzi" class="tab-content text-xl sm:text-2xl leading-loose text-gray-800 chinese-text text-justify"></div>
+                    <div id="tab-pinyin" class="tab-content hidden text-base sm:text-lg leading-loose text-blue-700 font-mono text-justify"></div>
+                    <div id="tab-meaning" class="tab-content hidden text-sm sm:text-base leading-relaxed text-gray-700 italic text-justify"></div>
+                </div>
+                
+                <div class="p-3 bg-yellow-50 border-t border-yellow-100 text-yellow-800 text-xs sm:text-sm rounded-b-xl flex gap-2">
+                    <i class="fa-solid fa-info-circle mt-0.5 shrink-0"></i>
+                    <span>Đáp án tham khảo. Nên tự trả lời trước.</span>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 5. Review Screen -->
+    <template id="tpl-review">
+        <div class="max-w-4xl mx-auto pb-24 px-2 sm:px-0">
+            <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-gray-800 border-l-8 border-blue-600 pl-4 py-2 bg-white shadow-sm rounded-r-lg mt-4">Kết quả bài thi</h2>
+            
+            <!-- Loop items will be simpler on mobile -->
+            <div class="space-y-8 sm:space-y-10">
+                <div id="review-part-1">
+                    <div class="flex items-center gap-2 mb-4 sticky top-0 bg-gray-50 py-2 z-10">
+                        <div class="bg-blue-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-sm sm:text-base">1</div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-700">Nghe nhắc lại</h3>
+                    </div>
+                    <div id="review-p1-list" class="space-y-4"></div>
+                </div>
+
+                <div id="review-part-2">
+                    <div class="flex items-center gap-2 mb-4 sticky top-0 bg-gray-50 py-2 z-10">
+                        <div class="bg-blue-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-sm sm:text-base">2</div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-700">Mô tả tranh</h3>
+                    </div>
+                    <div id="review-p2-list" class="space-y-6"></div>
+                </div>
+
+                <div id="review-part-3">
+                    <div class="flex items-center gap-2 mb-4 sticky top-0 bg-gray-50 py-2 z-10">
+                        <div class="bg-blue-600 text-white w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-sm sm:text-base">3</div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-700">Trả lời câu hỏi</h3>
+                    </div>
+                    <div id="review-p3-list" class="space-y-6"></div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12 mb-8">
+                <button onclick="location.reload()" class="px-8 py-3 bg-gray-800 text-white rounded-lg shadow-lg hover:bg-gray-900 font-bold transition-transform transform hover:-translate-y-1 w-full sm:w-auto">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> Làm đề khác
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // --- 1. MOCK DATA ---
+        const MOCK_DATA = {
+            "deso1": {
+                "p1.txt": `今天天气很好，我们去公园玩吧。\n你能帮我买一杯咖啡吗？\n这部电影我已经看了三遍了。\n对不起，因为堵车我迟到了。\n这个周末你有空吗？\n他的汉语说得很流利。\n我最喜欢北京的秋天。\n这本书很有意思，你应该读一读。\n健康是最重要的。\n我们在学校门口见面吧。`,
+                "img1.png": "https://images.unsplash.com/photo-1556910103-1c02745a30bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                "P2_1.txt": `这张照片里有两个人，他们正在厨房里做饭。#Zhè zhāng zhàopiàn li yǒu liǎng gèrén, tāmen zhèngzài chúfáng lǐ zuò fàn.#Trong bức ảnh này có hai người, họ đang nấu ăn trong bếp.`,
+                "img2.png": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                "P2_2.txt": `一个女孩正在图书馆里认真地看书。#Yīgè nǚhái zhèngzài túshū guǎn lǐ rènzhēn dì kànshū.#Một cô gái đang chăm chú đọc sách trong thư viện.`,
+                "p3_1.txt": `Bạn thích đi du lịch một mình hay đi cùng bạn bè? Tại sao?#我认为和朋友一起去旅游更有意思。因为我们可以互相照顾，还可以一起拍照、聊天。如果有困难，大家可以一起解决。#Wǒ rènwéi hé péngyǒu yīqǐ qù lǚyóu gèng yǒuyìsi. Yīnwèi wǒmen kěyǐ hùxiāng zhàogù, hái kěyǐ yīqǐ pāizhào, liáotiān. Rúguǒ yǒu kùnnán, dàjiā kěyǐ yīqǐ jiějué.#Tôi nghĩ đi du lịch cùng bạn bè thú vị hơn. Bởi vì chúng tôi có thể chăm sóc lẫn nhau, còn có thể cùng nhau chụp ảnh, trò chuyện. Nếu gặp khó khăn, mọi người có thể cùng nhau giải quyết.`,
+                "p3_2.txt": `Theo bạn, việc học ngoại ngữ có quan trọng không?#我觉得学外语非常重要。首先，它可以帮我们找到更好的工作。其次，我们可以了解别的国家的文化。最后，学外语也能让我们交到更多的外国朋友。#Wǒ juédé xué wàiyǔ fēicháng zhòngyào. Shǒuxiān, tā kěyǐ bāng wǒmen zhǎodào gèng hǎo de gōngzuò. Qícì, wǒmen kěyǐ liǎojiě bié de guójiā de wénhuà. Zuìhòu, xué wàiyǔ yě néng ràng wǒmen jiāo dào gèng duō de wàiguó péngyǒu.#Tôi cảm thấy học ngoại ngữ vô cùng quan trọng. Đầu tiên, nó giúp chúng ta tìm được công việc tốt hơn. Thứ hai, chúng ta có thể hiểu biết văn hóa nước khác. Cuối cùng, học ngoại ngữ cũng giúp chúng ta kết bạn được với nhiều người nước ngoài hơn.`
+            },
+             "deso2": {
+                "p1.txt": `这件衣服多少钱？\n你别担心，一切都会好的。\n明天我要去上海出差。\n你能小声点儿吗？\n祝你生日快乐，天天开心。\n我在找车钥匙，你看见了吗？\n这道菜太辣了，我吃不了。\n请保持环境卫生。\n时间过得真快。\n谢谢你的帮助。`,
+                "img1.png": "https://images.unsplash.com/photo-1533745848184-3db07256e163?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                "P2_1.txt": `一群年轻人正在举杯庆祝，看起来非常开心。#Yīqún niánqīng rén zhèngzài jǔ bēi qìngzhù, kàn qǐlái fēicháng kāixīn.#Một nhóm thanh niên đang nâng ly chúc mừng, trông rất vui vẻ.`,
+                "img2.png": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", 
+                "P2_2.txt": `他在电脑前工作，看起来很累。#Tā zài diànnǎo qián gōngzuò, kàn qǐlái hěn lèi.#Anh ấy đang làm việc trước máy tính, trông có vẻ rất mệt.`,
+                "p3_1.txt": `Lợi ích của việc đọc sách là gì?#读书有很多好处。第一，读书可以开阔眼界，增长知识。第二，读书可以让我们放松心情。第三，通过读书，我们可以学到很多人生的道理。#Dúshū yǒu hěnduō hǎochù. Dì yī, dúshū kěyǐ kāikuò yǎnjiè, zēngzhǎng zhīshì. Dì èr, dúshū kěyǐ ràng wǒmen fàngsōng xīnqíng. Dì sān, tōngguò dúshū, wǒmen kěyǐ xué dào hěnduō rénshēng de dàolǐ.#Đọc sách có rất nhiều lợi ích. Thứ nhất, đọc sách giúp mở rộng tầm nhìn, tăng trưởng kiến thức. Thứ hai, đọc sách giúp chúng ta thư giãn tâm trạng. Thứ ba, thông qua đọc sách, chúng ta học được nhiều đạo lý nhân sinh.`,
+                "p3_2.txt": `Bạn thường làm gì để bảo vệ môi trường?#为了保护环境，我通常会少用塑料袋，出门多坐公共汽车或者骑自行车。另外，我也注意节约用水和用电。#Wèile bǎohù huánjìng, wǒ tōngcháng huì shǎo yòng sùliào dài, chūmén duō zuò gōnggòng qìchē huòzhě qí zìxíngchē. Lìngwài, wǒ yě zhùyì jiéyuē yòngshuǐ hé yòng diàn.#Để bảo vệ môi trường, tôi thường hạn chế dùng túi nilon, ra ngoài thường đi xe buýt hoặc đi xe đạp. Ngoài ra, tôi cũng chú ý tiết kiệm nước và điện.`
+            }
+        };
+
+        class MockFileSystem {
+            static getFile(path) {
+                const parts = path.split('/');
+                if(parts.length < 3) return null;
+                const examSet = parts[1]; 
+                const fileName = parts[2]; 
+                if (MOCK_DATA[examSet] && MOCK_DATA[examSet][fileName]) return MOCK_DATA[examSet][fileName];
+                return null;
+            }
+            static getExamSets() { return Object.keys(MOCK_DATA); }
+        }
+
+        // --- 2. AUDIO ENGINE ---
+        const AudioEngine = {
+            synth: window.speechSynthesis,
+            voices: [],
+            
+            init() {
+                this.loadVoices();
+                if (speechSynthesis.onvoiceschanged !== undefined) {
+                    speechSynthesis.onvoiceschanged = this.loadVoices.bind(this);
+                }
+            },
+
+            loadVoices() {
+                this.voices = this.synth.getVoices();
+            },
+
+            speak(text, lang = 'zh-CN', onEnd) {
+                if (this.synth.speaking) this.synth.cancel();
+                const utterThis = new SpeechSynthesisUtterance(text);
+                const zhVoice = this.voices.find(v => v.lang.includes('zh') || v.lang.includes('CN'));
+                if (zhVoice) utterThis.voice = zhVoice;
+                utterThis.lang = lang;
+                utterThis.rate = 0.9;
+                if (onEnd) utterThis.onend = onEnd;
+                this.synth.speak(utterThis);
+            },
+
+            playTing() {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(1000, ctx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1); 
+                gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                oscillator.start();
+                oscillator.stop(ctx.currentTime + 0.5);
+            }
+        };
+
+        AudioEngine.init();
+
+        // --- 3. APP LOGIC ---
+        const App = {
+            state: {
+                currentExam: null,
+                p1Data: [], p1Index: 0,
+                p2Data: [], p2Index: 0,
+                p3Data: [], p3Index: 0,
+                userRecordings: { p1: [], p2: [], p3: [] },
+                mediaRecorder: null,
+                audioChunks: []
+            },
+
+            init() { this.renderDashboard(); },
+
+            resetExamState() {
+                this.state.p1Index = 0;
+                this.state.p2Index = 0;
+                this.state.p3Index = 0;
+                this.state.userRecordings = { p1: [], p2: [], p3: [] };
+            },
+
+            loadExamData(examId) {
+                this.state.currentExam = examId;
+                const p1Raw = MockFileSystem.getFile(`data_HSKK/${examId}/p1.txt`);
+                this.state.p1Data = p1Raw.split('\n').filter(line => line.trim() !== '');
+                this.state.p2Data = [1, 2].map(i => {
+                    const img = MockFileSystem.getFile(`data_HSKK/${examId}/img${i}.png`);
+                    const textRaw = MockFileSystem.getFile(`data_HSKK/${examId}/P2_${i}.txt`);
+                    const [hanzi, pinyin, meaning] = textRaw.split('#');
+                    return { id: i, img, hanzi, pinyin, meaning };
+                });
+                this.state.p3Data = [1, 2].map(i => {
+                    const textRaw = MockFileSystem.getFile(`data_HSKK/${examId}/p3_${i}.txt`);
+                    const [question, hanzi, pinyin, meaning] = textRaw.split('#');
+                    return { id: i, question, hanzi, pinyin, meaning };
+                });
+            },
+
+            // --- Render Functions ---
+            renderDashboard() {
+                const container = document.getElementById('app-container');
+                const tpl = document.getElementById('tpl-dashboard').content.cloneNode(true);
+                const list = tpl.getElementById('exam-list');
+                const footer = document.getElementById('control-bar');
+                footer.classList.add('hidden');
+
+                MockFileSystem.getExamSets().forEach(examId => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-4 sm:p-6 rounded-xl shadow-md hover:shadow-lg transition cursor-pointer border border-transparent hover:border-blue-500 active:bg-blue-50";
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Đề thi</span>
+                            <i class="fa-solid fa-graduation-cap text-gray-300"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-800 capitalize mb-2">${examId.replace('deso', 'Đề Số ')}</h3>
+                        <p class="text-sm text-gray-500 line-clamp-2">Bao gồm 3 phần thi tiêu chuẩn HSKK Trung Cấp.</p>
+                        <div class="mt-4 flex items-center text-sm text-blue-600 font-semibold">
+                            Làm bài ngay <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </div>
+                    `;
+                    card.onclick = () => {
+                        this.resetExamState();
+                        this.loadExamData(examId);
+                        this.showPartIntro(1);
+                    };
+                    list.appendChild(card);
+                });
+                container.innerHTML = '';
+                container.appendChild(tpl);
+            },
+
+            showPartIntro(partNum) {
+                const container = document.getElementById('app-container');
+                const tpl = document.getElementById('tpl-part-intro').content.cloneNode(true);
+                const footer = document.getElementById('control-bar');
+                footer.classList.add('hidden');
+
+                const config = {
+                    1: { icon: 'fa-headphones', title: 'Phần 1: Nghe và Nhắc lại', desc: 'Nghe 10 câu. Sau mỗi câu, bạn có 8 giây để nhắc lại.' },
+                    2: { icon: 'fa-image', title: 'Phần 2: Mô tả tranh', desc: 'Xem 2 bức tranh. Mô tả nội dung bức tranh bằng một đoạn văn ngắn.' },
+                    3: { icon: 'fa-comments', title: 'Phần 3: Trả lời câu hỏi', desc: 'Trả lời 2 câu hỏi nghị luận. Nêu quan điểm và lý do của bạn.' }
+                };
+
+                tpl.querySelector('.part-icon').className = `part-icon fa-solid ${config[partNum].icon}`;
+                tpl.querySelector('.part-title').innerText = config[partNum].title;
+                tpl.querySelector('.part-desc').innerText = config[partNum].desc;
+                tpl.querySelector('.btn-start-part').onclick = () => {
+                    if (partNum === 1) this.startPart1();
+                    else if (partNum === 2) this.startPart2();
+                    else if (partNum === 3) this.startPart3();
+                };
+                container.innerHTML = '';
+                container.appendChild(tpl);
+            },
+
+            // --- PART 1 LOGIC ---
+            startPart1() {
+                const container = document.getElementById('app-container');
+                container.innerHTML = '';
+                container.appendChild(document.getElementById('tpl-part-1').content.cloneNode(true));
+                this.playPart1Sequence();
+            },
+//số câu
+            async playPart1Sequence() {
+                if (this.state.p1Index >= 1) {
+                    this.showPartIntro(2);
+                    return;
+                }
+
+                const uiIndex = document.getElementById('p1-current-index');
+                const progress = document.getElementById('p1-progress');
+                const statusMsg = document.getElementById('p1-status-msg');
+                const viewListen = document.getElementById('p1-state-listen');
+                const viewWait = document.getElementById('p1-state-wait');
+                const viewRecord = document.getElementById('p1-state-record');
+                const countdownSpan = document.getElementById('p1-countdown');
+
+                uiIndex.innerText = this.state.p1Index + 1;
+                progress.style.width = `${((this.state.p1Index) / 10) * 100}%`;
+
+                viewListen.classList.remove('hidden');
+                viewWait.classList.add('hidden');
+                viewRecord.classList.add('hidden');
+                statusMsg.innerText = "Đang phát...";
+
+                const currentText = this.state.p1Data[this.state.p1Index];
+                await new Promise(r => setTimeout(r, 1000));
+                
+                AudioEngine.speak(currentText, 'zh-CN', async () => {
+                    viewListen.classList.add('hidden');
+                    viewWait.classList.remove('hidden');
+                    statusMsg.innerText = "Chuẩn bị...";
+                    
+                    for(let i=3; i>0; i--) {
+                        countdownSpan.innerText = i;
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+
+                    viewWait.classList.add('hidden');
+                    viewRecord.classList.remove('hidden');
+                    AudioEngine.playTing();
+                    statusMsg.innerText = "Ghi âm (8s)";
+
+                    this.startRecording();
+
+                    setTimeout(() => {
+                        this.stopRecording((audioBlob) => {
+                            this.state.userRecordings.p1.push({
+                                index: this.state.p1Index,
+                                original: currentText,
+                                audio: audioBlob
+                            });
+                            this.state.p1Index++;
+                            this.playPart1Sequence();
+                        });
+                    }, 8000); 
+                });
+            },
+
+            // --- PART 2 & 3 LOGIC ---
+            startPart2() { this.renderVisualQA('part2'); },
+            startPart3() { this.renderVisualQA('part3'); },
+
+            renderVisualQA(mode) {
+                const isPart2 = mode === 'part2';
+                const data = isPart2 ? this.state.p2Data : this.state.p3Data;
+                const currentIndex = isPart2 ? this.state.p2Index : this.state.p3Index;
+                const currentItem = data[currentIndex];
+
+                const container = document.getElementById('app-container');
+                container.innerHTML = '';
+                const tpl = document.getElementById('tpl-visual-qa').content.cloneNode(true);
+                
+                tpl.querySelector('.part-label').innerText = isPart2 
+                    ? `Phần 2 - Hình ${currentIndex + 1}/2` 
+                    : `Phần 3 - Câu ${currentIndex + 1}/2`;
+                
+                const stimulusContainer = tpl.getElementById('stimulus-container');
+                if (isPart2) {
+                    // Mobile Optimization: Restrict max height
+                    stimulusContainer.innerHTML = `<img src="${currentItem.img}" class="max-h-[40vh] lg:max-h-full w-auto max-w-full rounded shadow-sm object-contain">`;
+                } else {
+                    stimulusContainer.innerHTML = `<div class="p-4 sm:p-6 text-xl sm:text-2xl font-bold text-center chinese-text text-gray-800">${currentItem.question}</div>
+                    <div class="mt-2 text-gray-500 text-xs sm:text-sm italic text-center">(Đọc câu hỏi và trả lời)</div>`;
+                    setTimeout(() => AudioEngine.speak(currentItem.question), 500);
+                }
+
+                tpl.getElementById('tab-hanzi').innerText = currentItem.hanzi;
+                tpl.getElementById('tab-pinyin').innerText = currentItem.pinyin;
+                tpl.getElementById('tab-meaning').innerText = currentItem.meaning;
+
+                container.appendChild(tpl);
+
+                const footer = document.getElementById('control-bar');
+                footer.classList.remove('hidden');
+                
+                this.setupVisualQAElements(mode, currentItem, currentIndex, data.length);
+            },
+
+            setupVisualQAElements(mode, item, index, total) {
+                const btnRecord = document.getElementById('btn-record-toggle');
+                const btnNext = document.getElementById('btn-next');
+                const btnHint = document.querySelector('.btn-toggle-hint');
+                const panelAnswer = document.getElementById('answer-panel');
+                const statusText = document.getElementById('record-status-text');
+                const timerDisplay = document.getElementById('recording-timer');
+                const recordingUI = document.getElementById('recording-ui');
+                const playbackUI = document.getElementById('playback-ui');
+                const audioPlayer = document.getElementById('user-playback-audio');
+                const btnRerecord = document.getElementById('btn-rerecord');
+
+                let isRecording = false;
+                let timerInterval;
+                let startTime;
+                let currentBlob = null;
+
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.tab-btn').forEach(b => {
+                            b.classList.remove('tab-active'); b.classList.add('tab-inactive');
+                        });
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                        e.target.classList.add('tab-active'); e.target.classList.remove('tab-inactive');
+                        document.getElementById(`tab-${e.target.dataset.tab}`).classList.remove('hidden');
+                    });
+                });
+
+                btnHint.onclick = () => {
+                    panelAnswer.classList.remove('opacity-50', 'pointer-events-none', 'filter', 'blur-sm');
+                    // Scroll to answer on mobile if needed
+                    if (window.innerWidth < 1024) {
+                       panelAnswer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    btnHint.innerHTML = '<i class="fa-regular fa-eye"></i> Đã hiện';
+                };
+
+                document.getElementById('btn-speak-sample').onclick = () => AudioEngine.speak(item.hanzi);
+
+                btnRecord.onclick = () => {
+                    if (!isRecording) {
+                        isRecording = true;
+                        btnRecord.innerHTML = '<i class="fa-solid fa-stop text-xl sm:text-2xl"></i>';
+                        btnRecord.classList.replace('bg-red-500', 'bg-gray-800');
+                        btnRecord.classList.replace('hover:bg-red-600', 'hover:bg-gray-900');
+                        btnRecord.classList.add('recording-pulse');
+                        statusText.innerText = "Đang ghi âm...";
+                        
+                        startTime = Date.now();
+                        timerDisplay.innerText = "00:00";
+                        timerInterval = setInterval(() => {
+                            const delta = Math.floor((Date.now() - startTime) / 1000);
+                            const m = Math.floor(delta / 60).toString().padStart(2, '0');
+                            const s = (delta % 60).toString().padStart(2, '0');
+                            timerDisplay.innerText = `${m}:${s}`;
+                        }, 1000);
+
+                        this.startRecording();
+                    } else {
+                        isRecording = false;
+                        clearInterval(timerInterval);
+                        btnRecord.classList.remove('recording-pulse');
+                        
+                        this.stopRecording((blob) => {
+                            currentBlob = blob;
+                            recordingUI.classList.add('hidden');
+                            playbackUI.classList.remove('hidden');
+                            audioPlayer.src = URL.createObjectURL(blob);
+                        });
+                    }
+                };
+
+                btnRerecord.onclick = () => {
+                    currentBlob = null;
+                    playbackUI.classList.add('hidden');
+                    recordingUI.classList.remove('hidden');
+                    btnRecord.innerHTML = '<i class="fa-solid fa-microphone text-xl sm:text-2xl"></i>';
+                    btnRecord.classList.replace('bg-gray-800', 'bg-red-500');
+                    btnRecord.classList.replace('hover:bg-gray-900', 'hover:bg-red-600');
+                    statusText.innerText = "Nhấn mic để nói";
+                    timerDisplay.innerText = "00:00";
+                };
+
+                btnNext.onclick = () => {
+                    if (isRecording) {
+                        alert("Vui lòng dừng ghi âm trước khi chuyển tiếp.");
+                        return;
+                    }
+                    if (!currentBlob) {
+                        alert("Bạn chưa ghi âm câu trả lời! Hãy nhấn mic để ghi âm.");
+                        return;
+                    }
+
+                    const storage = mode === 'part2' ? this.state.userRecordings.p2 : this.state.userRecordings.p3;
+                    storage.push({
+                        index: index,
+                        item: item,
+                        audio: currentBlob
+                    });
+
+                    if (mode === 'part2') {
+                        this.state.p2Index++;
+                        if (this.state.p2Index < total) this.renderVisualQA('part2');
+                        else this.showPartIntro(3);
+                    } else {
+                        this.state.p3Index++;
+                        if (this.state.p3Index < total) this.renderVisualQA('part3');
+                        else this.renderReview();
+                    }
+                };
+            },
+
+            // --- REVIEW LOGIC ---
+            renderReview() {
+                const container = document.getElementById('app-container');
+                const tpl = document.getElementById('tpl-review').content.cloneNode(true);
+                const footer = document.getElementById('control-bar');
+                footer.classList.add('hidden');
+
+                const list1 = tpl.getElementById('review-p1-list');
+                this.state.userRecordings.p1.forEach((rec, i) => list1.appendChild(this.createReviewRow(`Câu ${i+1}`, rec.original, null, rec.audio)));
+
+                const list2 = tpl.getElementById('review-p2-list');
+                this.state.userRecordings.p2.forEach((rec, i) => list2.appendChild(this.createReviewRow(`Hình ${i+1}`, rec.item.hanzi, rec.item.img, rec.audio)));
+
+                const list3 = tpl.getElementById('review-p3-list');
+                this.state.userRecordings.p3.forEach((rec, i) => list3.appendChild(this.createReviewRow(`Câu hỏi ${i+1}`, rec.item.hanzi, null, rec.audio, rec.item.question)));
+
+                container.innerHTML = '';
+                container.appendChild(tpl);
+            },
+
+            createReviewRow(label, sampleText, img, audioBlob, questionText = "") {
+                const div = document.createElement('div');
+                div.className = "bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200";
+                
+                let html = `<div class="font-bold text-base sm:text-lg text-blue-800 mb-3 border-b pb-2 truncate">${label}</div>`;
+                
+                if (questionText) html += `<div class="text-gray-700 font-semibold mb-3 italic text-sm sm:text-base bg-gray-50 p-2 rounded">"${questionText}"</div>`;
+                
+                html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">`;
+                
+                // Column 1
+                html += `
+                    <div class="bg-blue-50 p-3 sm:p-4 rounded-lg flex flex-col">
+                        <div class="text-[10px] sm:text-xs font-bold text-blue-600 uppercase mb-2">Bài làm của bạn</div>
+                        ${img ? `<img src="${img}" class="w-full h-32 sm:h-40 object-contain bg-white rounded border mb-3">` : ''}
+                        <audio controls src="${URL.createObjectURL(audioBlob)}" class="w-full mt-auto"></audio>
+                    </div>
+                `;
+
+                // Column 2
+                html += `
+                    <div class="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[10px] sm:text-xs font-bold text-gray-600 uppercase">Đáp án mẫu</span>
+                            <button class="text-blue-500 hover:text-blue-700 text-xs sm:text-sm btn-play-sample font-semibold"><i class="fa-solid fa-volume-high"></i> Nghe</button>
+                        </div>
+                        <div class="text-gray-800 chinese-text text-base sm:text-lg leading-relaxed text-justify">${sampleText}</div>
+                    </div>
+                `;
+                
+                html += `</div>`;
+                div.innerHTML = html;
+                div.querySelector('.btn-play-sample').onclick = () => AudioEngine.speak(sampleText);
+                return div;
+            },
+
+            // --- RECORDING HELPERS ---
+            async startRecording() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.state.mediaRecorder = new MediaRecorder(stream);
+                    this.state.audioChunks = [];
+                    this.state.mediaRecorder.ondataavailable = (event) => this.state.audioChunks.push(event.data);
+                    this.state.mediaRecorder.start();
+                } catch (err) {
+                    console.error(err);
+                    alert("Lỗi: Không thể truy cập Microphone.");
+                }
+            },
+
+            stopRecording(callback) {
+                if (this.state.mediaRecorder && this.state.mediaRecorder.state !== 'inactive') {
+                    this.state.mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(this.state.audioChunks, { type: 'audio/wav' });
+                        this.state.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                        if (callback) callback(audioBlob);
+                    };
+                    this.state.mediaRecorder.stop();
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => App.init());
+    </script>
+</body>
+</html>

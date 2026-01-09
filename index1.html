@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSKK Trung Cấp - Luyện Thi Pro</title>
+    <style>
+        /* =========================================
+           1. CSS VARIABLES & RESET (PREMIUM BLUE)
+           ========================================= */
+        :root {
+            /* Palette: Premium Education Blue */
+            --primary: #0EA5E9;       /* Sky 500 - Tươi sáng, hiện đại */
+            --primary-dark: #0284C7;  /* Sky 600 - Đậm đà */
+            --primary-light: #E0F2FE; /* Sky 100 - Nền nhẹ */
+            
+            --accent: #F59E0B;        /* Amber 500 - Điểm nhấn */
+            
+            --bg-body: #F1F5F9;       /* Slate 100 - Xám xanh rất nhạt, sang trọng */
+            --bg-card: #FFFFFF;
+            
+            --text-main: #0F172A;     /* Slate 900 */
+            --text-sub: #64748B;      /* Slate 500 */
+            
+            --danger: #EF4444;
+            --success: #10B981;
+            
+            /* Spacing & Borders */
+            --radius-sm: 8px;
+            --radius-md: 16px;        /* Bo tròn nhiều hơn */
+            --radius-lg: 24px;
+            
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            
+            --trans-fast: 0.2s ease;
+            --trans-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* =========================================
+           2. UTILITIES & TYPOGRAPHY
+           ========================================= */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .text-center { text-align: center; }
+        
+        h1, h2, h3 { font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; }
+        h1 { font-size: 1.5rem; color: var(--primary-dark); }
+        h2 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-sub { color: var(--text-sub); }
+        .text-primary { color: var(--primary); font-weight: 600; }
+        .text-danger { color: var(--danger); }
+
+        /* =========================================
+           3. COMPONENTS
+           ========================================= */
+        
+        /* Header */
+        header {
+            background: var(--bg-card);
+            height: 70px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+            z-index: 10;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .logo { display: flex; align-items: center; gap: 12px; font-weight: 800; color: var(--primary-dark); font-size: 1.1rem; }
+        .logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 6px rgba(2, 132, 199, 0.2);
+        }
+
+        /* Main Layout */
+        main { flex: 1; overflow-y: auto; padding: 24px; position: relative; }
+        .container { max-width: 900px; margin: 0 auto; }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-card);
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid #F8FAFC;
+            transition: transform var(--trans-fast), box-shadow var(--trans-fast);
+        }
+        
+        .card-interactive:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            cursor: pointer;
+            border-color: var(--primary-light);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 12px 24px;
+            border-radius: 12px; /* Soft round */
+            font-weight: 600; cursor: pointer;
+            transition: all var(--trans-fast); border: none; gap: 8px;
+            font-size: 1rem;
+            letter-spacing: 0.01em;
+        }
+        .btn-lg { padding: 16px 32px; font-size: 1.1rem; }
+        .btn-sm { padding: 8px 16px; font-size: 0.85rem; border-radius: 8px; }
+
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
+            color: white; 
+            box-shadow: 0 4px 6px rgba(2, 132, 199, 0.25);
+        }
+        .btn-primary:hover { box-shadow: 0 6px 12px rgba(2, 132, 199, 0.35); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-outline { background: white; border: 2px solid #E2E8F0; color: var(--text-sub); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; filter: grayscale(1); }
+
+        /* Badges */
+        .badge {
+            background: var(--primary-light); color: var(--primary-dark);
+            padding: 6px 12px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Circular Timer (Restored & Improved) */
+        .timer-container {
+            position: relative;
+            width: 140px; height: 140px;
+            margin: 0 auto 32px auto;
+        }
+        .timer-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+        .timer-circle-bg { fill: none; stroke: #F1F5F9; stroke-width: 8; }
+        .timer-circle-fg {
+            fill: none; stroke: var(--primary); stroke-width: 8;
+            stroke-dasharray: 283; /* 2 * pi * 45 */
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear;
+            stroke-linecap: round;
+        }
+        .timer-text {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem; font-weight: 800; color: var(--text-main);
+        }
+        .timer-label {
+            position: absolute; top: 70%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.75rem; color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        /* Tabs System */
+        .tab-group { display: flex; border-bottom: 2px solid #E2E8F0; margin-bottom: 24px; }
+        .tab-btn {
+            padding: 12px 24px; cursor: pointer; font-weight: 600; color: var(--text-sub);
+            border-bottom: 2px solid transparent; margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { color: var(--primary); }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        
+        .tab-content { display: none; padding: 20px; background: #F8FAFC; border-radius: 12px; min-height: 120px; border: 1px solid #E2E8F0; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Review List */
+        .review-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px; border-bottom: 1px solid #E2E8F0;
+            transition: background 0.2s;
+        }
+        .review-item:hover { background: #F8FAFC; }
+        .review-item:last-child { border-bottom: none; }
+        .review-content { flex: 1; margin-right: 16px; }
+        .review-text { font-size: 1.15rem; color: var(--text-main); margin-bottom: 6px; font-weight: 500; }
+        .review-controls { display: flex; gap: 8px; }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            width: 100%; height: 8px; background: #E2E8F0;
+            border-radius: 4px; overflow: hidden; margin-bottom: 32px;
+        }
+        .progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Waveform Animation (Polished) */
+        .waveform { display: flex; align-items: center; justify-content: center; height: 40px; gap: 6px; }
+        .bar { 
+            width: 6px; background: var(--primary); border-radius: 4px; height: 10px; 
+            transition: height 0.1s ease; opacity: 0.3;
+        }
+        .recording .bar { animation: pulse 0.5s infinite alternate; opacity: 1; background: var(--danger); }
+        .recording .bar:nth-child(odd) { animation-duration: 0.4s; }
+        .recording .bar:nth-child(2n) { animation-duration: 0.6s; }
+        @keyframes pulse { 0% { height: 10px; } 100% { height: 40px; } }
+
+        /* Images */
+        .part2-img-container {
+            width: 100%; height: 300px; border-radius: 12px; overflow: hidden;
+            background: #E2E8F0; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 24px; border: 1px solid #CBD5E1;
+        }
+        .cn-text { font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <div class="logo-icon">H</div>
+            <span>HSKK Pro</span>
+        </div>
+        <div class="flex items-center" style="gap: 12px;">
+            <button class="btn btn-sm btn-outline" onclick="app.reset()">
+                <span style="font-size: 1.2em; line-height: 0;">🏠</span> Trang Chủ
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="app-main">
+        <!-- Injected via JS -->
+    </main>
+
+    <!-- Audio Beep -->
+    <audio id="sfx-beep" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEyMkmSp6+kYzM0SZOorKRjMzRJk6ispGMzNEmTqKykYzM0SZOorKRjMzRJk6ispGMzNEmTqKykYzM0SZOorKRjMzRJk6ispGMzNA=="></audio>
+
+    <!-- TEMPLATES -->
+
+    <!-- 1. DASHBOARD -->
+    <template id="tpl-dashboard">
+        <div class="container">
+            <div style="margin-bottom: 32px;">
+                <h2 style="font-size: 1.8rem; margin-bottom: 8px; color: var(--primary-dark);">Xin chào, Sĩ tử!</h2>
+                <p class="text-sub" style="font-size: 1.1rem;">Chọn phần thi để bắt đầu luyện tập (Dữ liệu: Đề số 1).</p>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card card-interactive" onclick="app.startPart1()">
+                    <div class="flex justify-between items-center" style="margin-bottom: 16px;">
+                        <span class="badge">Phần 1</span>
+                        <span style="font-size: 1.5rem; opacity: 0.5;">🎧</span>
+                    </div>
+                    <h3>Nghe Nhắc Lại</h3>
+                    <p class="text-sub text-sm" style="margin-top: 8px;">10 câu. Nghe - Chờ 3s - Ting - Nhắc lại. Tự động chuyển câu.</p>
+                </div>
+
+                <div class="card card-interactive" onclick="app.startPart2()">
+                    <div class="flex justify-between items-center" style="margin-bottom: 16px;">
+                        <span class="badge">Phần 2</span>
+                        <span style="font-size: 1.5rem; opacity: 0.5;">🖼️</span>
+                    </div>
+                    <h3>Mô Tả Tranh</h3>
+                    <p class="text-sub text-sm" style="margin-top: 8px;">2 câu. Xem tranh và ghi âm đoạn văn mô tả ngắn.</p>
+                </div>
+
+                <div class="card card-interactive" onclick="app.startPart3()">
+                    <div class="flex justify-between items-center" style="margin-bottom: 16px;">
+                        <span class="badge">Phần 3</span>
+                        <span style="font-size: 1.5rem; opacity: 0.5;">🗣️</span>
+                    </div>
+                    <h3>Trả Lời Câu Hỏi</h3>
+                    <p class="text-sub text-sm" style="margin-top: 8px;">2 câu. Trả lời vấn đề nghị luận. Có đáp án mẫu.</p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 2. PART 1: EXECUTION -->
+    <template id="tpl-part1-run">
+        <div class="container text-center" style="max-width: 650px; margin-top: 20px;">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="p1-progress" style="width: 0%"></div>
+            </div>
+
+            <div class="card">
+                <h2 id="p1-status-title" style="color: var(--primary); font-size: 1.5rem; margin-bottom: 24px;">Chuẩn bị...</h2>
+                
+                <!-- Circular Timer -->
+                <div class="timer-container" id="p1-timer-ui">
+                    <svg class="timer-svg" viewBox="0 0 100 100">
+                        <circle class="timer-circle-bg" cx="50" cy="50" r="45"></circle>
+                        <circle class="timer-circle-fg" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div class="timer-text" id="p1-timer-text">--</div>
+                    <div class="timer-label" id="p1-timer-label">Giây</div>
+                </div>
+
+                <div id="p1-visualizer" class="waveform hidden" style="margin: 20px auto;">
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div>
+                </div>
+
+                <p class="text-sub" id="p1-instruction" style="font-size: 1.1rem;">Đang tải dữ liệu...</p>
+            </div>
+            
+            <p class="text-sm text-sub" style="opacity: 0.8;">Hệ thống sẽ tự động chuyển câu hỏi.</p>
+        </div>
+    </template>
+
+    <!-- 3. PART 1: REVIEW -->
+    <template id="tpl-part1-review">
+        <div class="container">
+            <h2 style="margin-bottom: 24px;">Kết Quả Phần 1</h2>
+            <div class="card" id="p1-review-list" style="padding: 0; overflow: hidden;">
+                <!-- Items injected here -->
+            </div>
+            <div class="text-center" style="margin-top: 24px;">
+                <button class="btn btn-primary btn-lg" onclick="app.reset()">Hoàn thành bài thi</button>
+            </div>
+        </div>
+    </template>
+
+    <!-- 4. PART 2/3: GENERIC EXECUTION -->
+    <template id="tpl-generic-run">
+        <div class="container" style="max-width: 800px;">
+            <div class="flex justify-between items-center" style="margin-bottom: 24px;">
+                <h2 id="gen-title" class="text-primary">Phần 2 - Câu 1/2</h2>
+            </div>
+
+            <div class="card">
+                <!-- Content: Image or Question Text -->
+                <div id="gen-content-area" style="margin-bottom: 32px;"></div>
+
+                <!-- Circular Timer Small -->
+                <div class="flex items-center justify-center hidden" id="gen-timer-container" style="margin-bottom: 24px;">
+                     <div style="position: relative; width: 60px; height: 60px;">
+                        <svg class="timer-svg" viewBox="0 0 100 100">
+                            <circle class="timer-circle-bg" cx="50" cy="50" r="45" stroke-width="8"></circle>
+                            <circle id="gen-timer-circle" class="timer-circle-fg" cx="50" cy="50" r="45" stroke-width="8" stroke="var(--danger)"></circle>
+                        </svg>
+                        <div id="gen-timer-text" style="position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-weight:bold; font-size: 0.9rem;">00</div>
+                     </div>
+                </div>
+
+                <!-- Recorder Controls -->
+                <div class="text-center" style="padding: 32px; background: #F8FAFC; border-radius: 12px; border: 1px dashed #CBD5E1;">
+                    <div id="gen-visualizer" class="waveform hidden" style="margin-bottom: 24px;">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                    
+                    <button id="btn-record" class="btn btn-primary btn-lg">
+                        🎤 Bắt đầu Ghi âm
+                    </button>
+                    <button id="btn-stop" class="btn btn-outline btn-lg hidden" style="border-color: var(--danger); color: var(--danger);">
+                        ⏹️ Dừng & Nộp bài
+                    </button>
+                </div>
+            </div>
+
+            <!-- Answer Section (Hidden initially) -->
+            <div id="gen-answer-section" class="card hidden">
+                <h3 style="margin-bottom: 16px;">Đáp Án Mẫu</h3>
+                
+                <div class="tab-group">
+                    <div class="tab-btn active" onclick="app.switchTab(this, 'tab-cn')">Chữ Hán</div>
+                    <div class="tab-btn" onclick="app.switchTab(this, 'tab-py')">Pinyin</div>
+                    <div class="tab-btn" onclick="app.switchTab(this, 'tab-vi')">Nghĩa</div>
+                </div>
+
+                <div id="tab-cn" class="tab-content active cn-text" style="font-size: 1.3rem; line-height: 1.8; color: var(--text-main);"></div>
+                <div id="tab-py" class="tab-content text-primary" style="font-size: 1.1rem;"></div>
+                <div id="tab-vi" class="tab-content" style="font-size: 1.1rem;"></div>
+
+                <div style="margin-top: 32px; text-align: right;">
+                    <button class="btn btn-primary btn-lg" id="btn-next-q">Câu tiếp theo →</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        /* =========================================
+           DATA SIMULATION
+           ========================================= */
+        const MOCK_DATA = {
+            deso1: {
+                p1: [
+                    "周末我们去爬山吧，那里的风景很美。",
+                    "这件衣服颜色很漂亮，但是有点儿贵。",
+                    "为了身体健康，你应该多吃水果和蔬菜。",
+                    "我们要学会根据情况的变化来改变计划。",
+                    "由于天气原因，今天的航班被取消了。",
+                    "他对中国历史非常感兴趣，读了很多书。",
+                    "无论发生什么事情，我们都要保持冷静。",
+                    "这次考试虽然很难，但是他还是考得不错。",
+                    "成功的关键在于坚持，不能半途而废。",
+                    "保护环境是每一个人的责任。"
+                ],
+                p2: [
+                    {
+                        type: 'image',
+                        src: 'placeholder_park', 
+                        sample: "这张图片展示了一个公园。#Zhè zhāng túpiàn zhǎnshìle yīgè gōngyuán.#Bức ảnh này hiển thị một công viên. Mọi người đang tập thể dục vui vẻ."
+                    },
+                    {
+                        type: 'image',
+                        src: 'placeholder_library',
+                        sample: "他在图书馆看书。#Tā zài túshūguǎn kànshū.#Anh ấy đang đọc sách trong thư viện. Không khí rất yên tĩnh."
+                    }
+                ],
+                p3: [
+                    {
+                        question: "你觉得在网上买东西好，还是去商店买东西好？为什么？",
+                        sample: "我觉得在网上买东西更好。#Wǒ juéde zài wǎngshàng mǎi dōngxī gèng hǎo.#Tôi nghĩ mua sắm trực tuyến tốt hơn vì nó tiện lợi và tiết kiệm thời gian."
+                    },
+                    {
+                        question: "介绍一下你最喜欢的节日。",
+                        sample: "我最喜欢的节日是春节。#Wǒ zuì xǐhuān de jiérì shì chūnjié.#Lễ hội yêu thích nhất của tôi là Tết Nguyên Đán. Cả gia đình được đoàn tụ."
+                    }
+                ]
+            }
+        };
+
+        /* =========================================
+           CLASSES
+           ========================================= */
+        
+        // 1. Ring Timer Class
+        class RingTimer {
+            constructor(svgElement, textElement, labelElement) {
+                this.elCircle = svgElement.querySelector('.timer-circle-fg');
+                this.elText = textElement;
+                this.elLabel = labelElement; // Optional
+                this.circumference = 2 * Math.PI * 45; // r=45
+                this.interval = null;
+            }
+
+            start(seconds, onComplete) {
+                if(this.interval) clearInterval(this.interval);
+                
+                let remaining = seconds;
+                this.updateUI(remaining, seconds);
+                this.elCircle.style.transition = 'stroke-dashoffset 1s linear';
+
+                if(this.elLabel) this.elLabel.textContent = "Giây";
+
+                this.interval = setInterval(() => {
+                    remaining--;
+                    this.updateUI(remaining, seconds);
+                    
+                    if(remaining <= 0) {
+                        clearInterval(this.interval);
+                        if(onComplete) onComplete();
+                    }
+                }, 1000);
+            }
+
+            stop() {
+                if(this.interval) clearInterval(this.interval);
+            }
+
+            reset() {
+                this.stop();
+                this.elCircle.style.strokeDashoffset = 0;
+                this.elText.textContent = "--";
+            }
+
+            updateUI(remaining, total) {
+                const offset = this.circumference - (remaining / total) * this.circumference;
+                this.elCircle.style.strokeDashoffset = offset;
+                this.elText.textContent = remaining;
+                
+                // Color change logic
+                if(remaining <= 3) this.elCircle.style.stroke = 'var(--danger)';
+                else this.elCircle.style.stroke = 'var(--primary)';
+            }
+        }
+
+        // 2. Audio Engine
+        const AudioEngine = {
+            synth: window.speechSynthesis,
+            recorder: null,
+            chunks: [],
+            
+            speak(text, onEnd) {
+                if (this.synth.speaking) this.synth.cancel();
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.lang = 'zh-CN';
+                utter.rate = 0.8; 
+                utter.onend = onEnd;
+                this.synth.speak(utter);
+            },
+
+            playBeep() {
+                const audio = document.getElementById('sfx-beep');
+                if(audio) {
+                    audio.currentTime = 0;
+                    audio.play().catch(() => {});
+                }
+            },
+
+            async startRecord(visualizerId) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.recorder = new MediaRecorder(stream);
+                    this.chunks = [];
+                    this.recorder.ondataavailable = e => this.chunks.push(e.data);
+                    this.recorder.start();
+                    
+                    if(visualizerId) {
+                        const el = document.getElementById(visualizerId);
+                        el.classList.remove('hidden');
+                        el.classList.add('recording');
+                    }
+                    return true;
+                } catch(e) {
+                    alert("Cần quyền truy cập microphone!");
+                    return false;
+                }
+            },
+
+            stopRecord(onResult, visualizerId) {
+                if(!this.recorder) return;
+                this.recorder.onstop = () => {
+                    const blob = new Blob(this.chunks, { type: 'audio/webm' });
+                    const url = URL.createObjectURL(blob);
+                    if(visualizerId) {
+                        const el = document.getElementById(visualizerId);
+                        el.classList.add('hidden');
+                        el.classList.remove('recording');
+                    }
+                    if(onResult) onResult(url);
+                };
+                this.recorder.stop();
+                this.recorder.stream.getTracks().forEach(t => t.stop());
+            }
+        };
+
+        /* =========================================
+           APP LOGIC
+           ========================================= */
+        const app = {
+            data: MOCK_DATA.deso1,
+            state: {},
+            timers: {},
+
+            init() {
+                this.render('tpl-dashboard');
+            },
+
+            render(tplId) {
+                const main = document.getElementById('app-main');
+                const content = document.getElementById(tplId).content.cloneNode(true);
+                main.innerHTML = '';
+                main.appendChild(content);
+            },
+
+            reset() {
+                if(this.timers.p1) this.timers.p1.stop();
+                window.location.reload();
+            },
+
+            // --- PART 1 ---
+            startPart1() {
+                this.render('tpl-part1-run');
+                this.state.p1Results = []; 
+                // Init Timer
+                const svg = document.querySelector('#p1-timer-ui svg');
+                const txt = document.getElementById('p1-timer-text');
+                const lbl = document.getElementById('p1-timer-label');
+                this.timers.p1 = new RingTimer(document.getElementById('p1-timer-ui'), txt, lbl);
+                
+                this.runPart1Sequence(0);
+            },
+
+            runPart1Sequence(index) {
+                if(index >= this.data.p1.length) {
+                    this.showPart1Review();
+                    return;
+                }
+
+                const text = this.data.p1[index];
+                const uiTitle = document.getElementById('p1-status-title');
+                const uiInstr = document.getElementById('p1-instruction');
+                const uiProgress = document.getElementById('p1-progress');
+
+                uiProgress.style.width = `${((index) / 10) * 100}%`;
+
+                // Phase 1: Listen
+                uiTitle.textContent = `Câu ${index + 1}/10: Nghe`;
+                uiTitle.style.color = "var(--primary)";
+                uiInstr.textContent = "Tập trung nghe câu mẫu...";
+                this.timers.p1.reset();
+                document.getElementById('p1-timer-text').textContent = "🎧";
+                
+                setTimeout(() => {
+                    AudioEngine.speak(text, () => {
+                        // Phase 2: Countdown 3s
+                        uiTitle.textContent = `Chuẩn bị`;
+                        uiInstr.textContent = "Chờ tín hiệu...";
+                        
+                        this.timers.p1.start(3, () => {
+                            // Phase 3: Record
+                            AudioEngine.playBeep();
+                            this.recordPart1Step(index, text);
+                        });
+                    });
+                }, 1000);
+            },
+
+            recordPart1Step(index, text) {
+                const uiTitle = document.getElementById('p1-status-title');
+                const uiInstr = document.getElementById('p1-instruction');
+                
+                uiTitle.textContent = "GHI ÂM";
+                uiTitle.style.color = "var(--danger)";
+                uiInstr.textContent = "Nhắc lại câu vừa nghe!";
+                
+                // Visual timer for recording duration (mocked as 6s)
+                this.timers.p1.start(6, null);
+
+                AudioEngine.startRecord('p1-visualizer');
+
+                setTimeout(() => {
+                    AudioEngine.stopRecord((url) => {
+                        this.state.p1Results.push({ original: text, userAudio: url });
+                        this.runPart1Sequence(index + 1);
+                    }, 'p1-visualizer');
+                }, 6000); 
+            },
+
+            showPart1Review() {
+                this.render('tpl-part1-review');
+                const list = document.getElementById('p1-review-list');
+                
+                this.state.p1Results.forEach((item, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'review-item';
+                    div.innerHTML = `
+                        <div class="review-content">
+                            <div class="text-sm text-sub">Câu ${idx + 1}</div>
+                            <div class="review-text cn-text">${item.original}</div>
+                        </div>
+                        <div class="review-controls">
+                            <button class="btn btn-sm btn-outline" onclick="AudioEngine.speak('${item.original}')">🔊 Mẫu</button>
+                            <button class="btn btn-sm btn-primary" onclick="new Audio('${item.userAudio}').play()">▶️ Tôi</button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            },
+
+            // --- PART 2 & 3 ---
+            startPart2() {
+                this.state.currentSection = 'p2';
+                this.state.currentIndex = 0;
+                this.state.items = this.data.p2;
+                this.runGenericFlow();
+            },
+            startPart3() {
+                this.state.currentSection = 'p3';
+                this.state.currentIndex = 0;
+                this.state.items = this.data.p3;
+                this.runGenericFlow();
+            },
+
+            runGenericFlow() {
+                const idx = this.state.currentIndex;
+                const items = this.state.items;
+                const section = this.state.currentSection;
+
+                if(idx >= items.length) {
+                    alert("Hoàn thành phần thi! Bạn đã làm rất tốt.");
+                    this.init();
+                    return;
+                }
+
+                this.render('tpl-generic-run');
+                
+                document.getElementById('gen-title').textContent = 
+                    `${section === 'p2' ? 'Mô Tả Tranh' : 'Trả Lời Câu Hỏi'} - Câu ${idx + 1}/${items.length}`;
+
+                const contentDiv = document.getElementById('gen-content-area');
+                const currentItem = items[idx];
+
+                if(section === 'p2') {
+                    contentDiv.innerHTML = `
+                        <div class="part2-img-container">
+                             <svg width="100" height="100" viewBox="0 0 24 24" fill="#64748B"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                        </div>
+                        <div class="text-center text-sub">Hãy mô tả những gì bạn thấy trong hình (Mô phỏng: ${currentItem.src})</div>
+                    `;
+                } else {
+                    contentDiv.innerHTML = `
+                        <div style="background:#F0F9FF; padding: 24px; border-radius:12px; border-left: 5px solid var(--primary);">
+                            <h3 class="cn-text" style="font-size:1.6rem; color:var(--primary-dark); margin-bottom:12px;">
+                                ${currentItem.question}
+                            </h3>
+                            <p class="text-sub">Hãy đọc câu hỏi và đưa ra quan điểm của bạn.</p>
+                        </div>
+                    `;
+                }
+
+                const btnRecord = document.getElementById('btn-record');
+                const btnStop = document.getElementById('btn-stop');
+                const btnNext = document.getElementById('btn-next-q');
+                const answerSec = document.getElementById('gen-answer-section');
+                
+                // Small Timer setup
+                const timerContainer = document.getElementById('gen-timer-container');
+                const tCircle = document.getElementById('gen-timer-circle');
+                const tText = document.getElementById('gen-timer-text');
+                const smTimer = new RingTimer(timerContainer, tText, null); 
+
+                btnRecord.onclick = () => {
+                    AudioEngine.startRecord('gen-visualizer');
+                    btnRecord.classList.add('hidden');
+                    btnStop.classList.remove('hidden');
+                    
+                    // Show Timer counting up or mock max time
+                    timerContainer.classList.remove('hidden');
+                    smTimer.start(60, null); // Mock 60s limit
+                };
+
+                btnStop.onclick = () => {
+                    AudioEngine.stopRecord((url) => {
+                        smTimer.stop();
+                        timerContainer.classList.add('hidden');
+                        
+                        btnStop.disabled = true;
+                        btnStop.textContent = "Đã lưu bài";
+                        btnStop.style.borderColor = "var(--success)";
+                        btnStop.style.color = "var(--success)";
+                        
+                        answerSec.classList.remove('hidden');
+                        
+                        const parts = currentItem.sample.split('#');
+                        if(parts.length >= 3) {
+                            document.getElementById('tab-cn').textContent = parts[0];
+                            document.getElementById('tab-py').textContent = parts[1];
+                            document.getElementById('tab-vi').textContent = parts[2];
+                        }
+                    }, 'gen-visualizer');
+                };
+
+                btnNext.onclick = () => {
+                    this.state.currentIndex++;
+                    this.runGenericFlow();
+                };
+            },
+
+            switchTab(btn, contentId) {
+                const parent = btn.parentElement;
+                Array.from(parent.children).forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+
+                ['tab-cn', 'tab-py', 'tab-vi'].forEach(id => {
+                    document.getElementById(id).classList.remove('active');
+                });
+                document.getElementById(contentId).classList.add('active');
+            }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>
